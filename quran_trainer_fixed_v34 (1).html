@@ -1,0 +1,2083 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Quran Reading Trainer (Offline)</title>
+  <meta name="color-scheme" content="light dark">
+  <style>
+    :root{
+      --bg:#0b1220;
+      --bg2:#0f1a2e;
+      --card:rgba(255,255,255,.08);
+      --card2:rgba(255,255,255,.10);
+      --stroke:rgba(255,255,255,.14);
+      --text:#eaf0ff;
+      --muted:rgba(234,240,255,.72);
+      --muted2:rgba(234,240,255,.55);
+      --accent:#6aa6ff;
+      --accent2:#9ad0ff;
+      --good:#45d483;
+      --mid:#ffcc66;
+      --bad:#ff5c7a;
+      --shadow: 0 16px 50px rgba(0,0,0,.35);
+      --radius: 18px;
+      --focus: 0 0 0 3px rgba(106,166,255,.28);
+
+      /* For option lists */
+      --optBg:#0f1a2e;
+      --optText:#eaf0ff;
+
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    @media (prefers-color-scheme: light){
+      :root{
+        --bg:#f5f7ff;
+        --bg2:#eef2ff;
+        --card:rgba(0,0,0,.05);
+        --card2:rgba(0,0,0,.07);
+        --stroke:rgba(0,0,0,.10);
+        --text:#101526;
+        --muted:rgba(16,21,38,.72);
+        --muted2:rgba(16,21,38,.55);
+        --shadow: 0 18px 55px rgba(16,21,38,.14);
+
+        --optBg:#ffffff;
+        --optText:#101526;
+      }
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      background: radial-gradient(1200px 800px at 18% -10%, rgba(106,166,255,.24), transparent 50%),
+                  radial-gradient(1000px 700px at 110% 20%, rgba(69,212,131,.16), transparent 55%),
+                  radial-gradient(900px 650px at 40% 115%, rgba(255,92,122,.12), transparent 50%),
+                  linear-gradient(180deg, var(--bg), var(--bg2));
+      color:var(--text);
+      overflow-x:hidden;
+    }
+
+    .wrap{ max-width: 980px; margin: 0 auto; padding: 22px 16px 44px; }
+
+    .topbar{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+      position:sticky;
+      top:0;
+      z-index:50;
+      padding: 14px 10px 12px;
+      margin: -12px -10px 14px;
+      backdrop-filter: blur(12px);
+      background: linear-gradient(180deg, rgba(0,0,0,.22), rgba(0,0,0,0));
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    @media (prefers-color-scheme: light){
+      .topbar{ background: linear-gradient(180deg, rgba(255,255,255,.8), rgba(255,255,255,0)); border-bottom: 1px solid rgba(0,0,0,.06); }
+    }
+
+    .brand{ display:flex; flex-direction:column; gap:2px; min-width: 210px; }
+    .brand .title{ font-weight: 720; letter-spacing:.2px; font-size: 15px; line-height: 1.1; display:flex; align-items:center; gap:10px; }
+    .dot{
+      width:10px; height:10px; border-radius:999px;
+      background: radial-gradient(circle at 30% 30%, var(--accent2), var(--accent));
+      box-shadow: 0 0 0 5px rgba(106,166,255,.15);
+      flex: 0 0 auto;
+    }
+    .brand .subtitle{ color:var(--muted2); font-size: 12px; }
+
+    .controls{ display:flex; gap:10px; align-items:center; justify-content:flex-end; flex-wrap:wrap; }
+
+    .select, .btn, .input, .iconbtn{
+      border:1px solid var(--stroke);
+      background: linear-gradient(180deg, var(--card2), var(--card));
+      color: var(--text);
+      border-radius: 999px;
+      padding: 10px 12px;
+      font-size: 13px;
+      outline:none;
+      transition: transform .06s ease, border-color .15s ease, background .15s ease, box-shadow .15s ease;
+      box-shadow: 0 10px 28px rgba(0,0,0,.18);
+    }
+
+    /* Dropdown readability fix (Windows/Chrome/Edge) */
+    select.select{
+      color: var(--text) !important;
+      background-color: rgba(255,255,255,.06) !important;
+    }
+    select.select option{
+      color: var(--optText) !important;
+      background-color: var(--optBg) !important;
+    }
+
+    .select{
+      padding: 10px 34px 10px 12px;
+      appearance:none;
+      background-image:
+        linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+        linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+      background-position: calc(100% - 18px) calc(1em + 2px), calc(100% - 13px) calc(1em + 2px);
+      background-size: 5px 5px, 5px 5px;
+      background-repeat: no-repeat;
+      cursor:pointer;
+    }
+
+    .input{
+      border-radius: 14px;
+      padding: 10px 12px;
+      background: rgba(255,255,255,.06);
+      box-shadow:none;
+    }
+
+    .btn{
+      cursor:pointer; user-select:none;
+      display:inline-flex; align-items:center; justify-content:center; gap:10px;
+      font-weight:650; letter-spacing:.2px;
+    }
+    .btn:active{ transform: translateY(1px) }
+    .btn:hover{ border-color: rgba(106,166,255,.35) }
+    .btn:focus-visible{ box-shadow: var(--focus) }
+
+    .btn.primary{ background: linear-gradient(180deg, rgba(106,166,255,.22), rgba(106,166,255,.12)); border-color: rgba(106,166,255,.35); }
+    .btn.good{ background: linear-gradient(180deg, rgba(69,212,131,.22), rgba(69,212,131,.10)); border-color: rgba(69,212,131,.42); }
+    .btn.mid{ background: linear-gradient(180deg, rgba(255,204,102,.22), rgba(255,204,102,.10)); border-color: rgba(255,204,102,.45); }
+    .btn.bad{ background: linear-gradient(180deg, rgba(255,92,122,.22), rgba(255,92,122,.10)); border-color: rgba(255,92,122,.45); }
+
+    .iconbtn{
+      width: 40px; height:40px;
+      display:inline-flex; align-items:center; justify-content:center;
+      cursor:pointer; padding:0; border-radius: 999px;
+    }
+    .iconbtn:hover{ border-color: rgba(106,166,255,.35) }
+    .iconbtn:focus-visible{ box-shadow: var(--focus) }
+
+    .card{
+      border:1px solid var(--stroke);
+      background: linear-gradient(180deg, var(--card2), var(--card));
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .card.pad{ padding: 18px 16px; }
+
+    .grid{ display:grid; gap:14px; }
+    @media (min-width: 900px){ .grid.two{ grid-template-columns: 1.15fr .85fr; } }
+
+    .h1{ font-size: 22px; margin: 0 0 6px; letter-spacing:.2px; }
+    .p{ margin: 0; color: var(--muted); line-height: 1.55; font-size: 13px; }
+    .sectionTitle{
+      margin: 0 0 10px;
+      font-weight: 720; letter-spacing:.2px; font-size: 13px; color: var(--muted);
+      text-transform: uppercase;
+    }
+    .row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .row.between{ justify-content:space-between; }
+
+    .fileRow{
+      display:flex; justify-content:space-between; align-items:center;
+      gap:12px; padding:10px 10px; border-radius: 14px;
+      border:1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.04);
+    }
+    @media (prefers-color-scheme: light){
+      .fileRow{ border:1px solid rgba(0,0,0,.08); background: rgba(0,0,0,.03); }
+    }
+    .fileRow .label{ display:flex; flex-direction:column; gap:3px; min-width: 190px; }
+    .fileRow .label .t{ font-weight: 700; font-size: 13px; }
+    .fileRow .label .s{ color:var(--muted2); font-size: 12px; }
+
+    input[type="file"]{ max-width: 100%; color: var(--muted); font-size: 12px; }
+
+    .status{
+      display:grid; gap:8px;
+      grid-template-columns: 1fr 1fr;
+    }
+    .status .item{
+      padding:10px 10px; border-radius: 14px;
+      border:1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.04);
+      display:flex; justify-content:space-between; align-items:center; gap:10px;
+      font-size: 12px; color: var(--muted);
+    }
+    @media (prefers-color-scheme: light){
+      .status .item{ border:1px solid rgba(0,0,0,.08); background: rgba(0,0,0,.03); }
+    }
+    .status .ok{ color: rgba(69,212,131,.95); font-weight:700 }
+    .status .no{ color: rgba(255,92,122,.95); font-weight:700 }
+
+    .check{
+      display:flex; align-items:center; gap:10px;
+      padding:10px 10px; border-radius: 14px;
+      border:1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.04);
+      cursor:pointer; user-select:none;
+    }
+    @media (prefers-color-scheme: light){
+      .check{ border:1px solid rgba(0,0,0,.08); background: rgba(0,0,0,.03); }
+    }
+    .check input{ accent-color: var(--accent); cursor:pointer; }
+
+    .trainerCard{ padding: 18px 16px 14px; display:flex; flex-direction:column; gap:14px; }
+
+    .ayahHeader{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+    .ayahHeader .meta{ display:flex; flex-direction:column; gap:3px; min-width: 0; }
+    .ayahHeader .meta .line1{ font-weight: 800; font-size: 14px; letter-spacing:.2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .ayahHeader .meta .line2{ color: var(--text); font-size: 16px; font-weight: 850; opacity: .92; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .ayahIcons{ display:flex; gap:8px; align-items:center; flex:0 0 auto; }
+
+    .ayahTextWrap{
+      padding: 16px 12px; border-radius: var(--radius);
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      display:flex; flex-direction:column; gap:14px;
+      align-items:center; text-align:center;
+    }
+    @media (prefers-color-scheme: light){
+      .ayahTextWrap{ border:1px solid rgba(0,0,0,.08); background: rgba(0,0,0,.03); }
+    }
+
+    /* Arabic: now real Unicode from scores.text_ar */
+    .arabic{
+      direction: rtl;
+      unicode-bidi: plaintext;
+      font-size: 34px;
+      line-height: 1.95;
+      text-align:center;
+      max-width: 920px;
+      word-break: keep-all;
+      padding: 2px 6px;
+      user-select:text;
+      letter-spacing: 0; /* important: don't break shaping */
+      font-family: "Noto Naskh Arabic", "Amiri", "Scheherazade New", serif;
+    }
+
+    .word{
+      display:inline;
+      cursor:pointer;
+      user-select:text;
+      color: var(--text);
+      transition: color .1s ease, text-decoration-color .1s ease;
+      text-decoration: underline;
+      text-decoration-thickness: 1.5px;
+      text-decoration-color: rgba(0,0,0,0);
+      text-underline-offset: 7px;
+      padding: 0;
+      margin: 0 2px;
+    }
+    .word:hover{
+      color: var(--accent);
+      text-decoration-color: rgba(106,166,255,.55);
+    }
+    .word:active{ color: var(--accent2); }
+
+    .translations{ display:flex; flex-direction:column; gap:8px; width: 100%; max-width: 860px; }
+    .trLine{ font-size: 15px; line-height: 1.55; color: var(--muted); margin: 0; text-align:center; white-space:pre-wrap; }
+    .trLabel{ font-size: 11px; color: var(--muted2); letter-spacing:.14em; text-transform:uppercase; margin-bottom: -2px; }
+
+    .bottomBar{ display:flex; gap:12px; flex-wrap:wrap; justify-content:center; padding: 6px 0 2px; }
+    .hint{ text-align:center; font-size: 12px; color: var(--muted2); margin-top: -2px; }
+
+    .bigPlay{
+      width: 52px; height: 52px; border-radius: 999px;
+      border:1px solid rgba(106,166,255,.40);
+      background: radial-gradient(circle at 30% 30%, rgba(106,166,255,.22), rgba(106,166,255,.10));
+      box-shadow: 0 16px 40px rgba(0,0,0,.22);
+      cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+      transition: transform .08s ease, border-color .15s ease;
+      flex: 0 0 auto;
+    }
+    .bigPlay:hover{ border-color: rgba(106,166,255,.62) }
+    .bigPlay:active{ transform: translateY(1px) }
+    .bigPlay svg{ width: 22px; height:22px; fill: var(--text); opacity: .92 }
+
+    .pill{
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+      color: var(--muted);
+      font-size: 12px;
+      padding: 8px 10px;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+    }
+    @media (prefers-color-scheme: light){
+      .pill{ border:1px solid rgba(0,0,0,.10); background: rgba(0,0,0,.03); }
+    }
+
+    .kbd{
+      font-family: var(--mono);
+      font-size: 11px;
+      border:1px solid rgba(255,255,255,.16);
+      border-bottom-width: 2px;
+      border-radius: 10px;
+      padding: 2px 6px;
+      color: var(--muted);
+      background: rgba(0,0,0,.14);
+    }
+    @media (prefers-color-scheme: light){
+      .kbd{ border:1px solid rgba(0,0,0,.12); background: rgba(255,255,255,.8); }
+    }
+
+    .popoverWrap{ position:relative; }
+    .popover{
+      position:absolute; right:0; top: calc(100% + 10px);
+      width: min(320px, 92vw);
+      background: linear-gradient(180deg, rgba(20,28,52,.92), rgba(14,20,39,.92));
+      border:1px solid rgba(255,255,255,.14);
+      border-radius: 16px;
+      padding: 12px;
+      box-shadow: 0 22px 60px rgba(0,0,0,.45);
+      backdrop-filter: blur(12px);
+      display:none;
+      z-index: 60;
+    }
+    @media (prefers-color-scheme: light){
+      .popover{
+        background: rgba(255,255,255,.95);
+        border:1px solid rgba(0,0,0,.10);
+        box-shadow: 0 22px 60px rgba(16,21,38,.18);
+      }
+    }
+    .popover.open{ display:block; }
+    .popover .title{ font-weight:800; font-size: 13px; margin: 0 0 10px; letter-spacing:.2px; }
+    .popover .sep{ height:1px; background: rgba(255,255,255,.12); margin: 10px 0; }
+    @media (prefers-color-scheme: light){ .popover .sep{ background: rgba(0,0,0,.10); } }
+    .popover .small{ color: var(--muted2); font-size: 12px; margin: 0 0 8px; line-height:1.45; }
+
+    .tooltip{
+      position:fixed; z-index: 1000; pointer-events:none;
+      background: rgba(18,24,44,.92);
+      color: var(--text);
+      border:1px solid rgba(255,255,255,.16);
+      border-radius: 14px;
+      padding: 8px 10px;
+      box-shadow: 0 18px 45px rgba(0,0,0,.40);
+      max-width: min(320px, 90vw);
+      display:none;
+      backdrop-filter: blur(10px);
+      font-size: 12px;
+      line-height: 1.35;
+      white-space:pre-wrap;
+    }
+    @media (prefers-color-scheme: light){
+      .tooltip{
+        background: rgba(255,255,255,.96);
+        color: var(--text);
+        border:1px solid rgba(0,0,0,.12);
+        box-shadow: 0 18px 45px rgba(16,21,38,.16);
+      }
+    }
+
+    .modalOverlay{
+      position:fixed; inset:0;
+      background: rgba(0,0,0,.55);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding: 18px;
+      z-index: 200;
+    }
+    .modalOverlay.open{ display:flex; }
+    .modal{
+      width: min(860px, 96vw);
+      max-height: min(86vh, 900px);
+      overflow:auto;
+      border-radius: 20px;
+      border:1px solid rgba(255,255,255,.16);
+      background: linear-gradient(180deg, rgba(20,28,52,.96), rgba(14,20,39,.96));
+      box-shadow: 0 26px 75px rgba(0,0,0,.55);
+      backdrop-filter: blur(14px);
+    }
+    @media (prefers-color-scheme: light){
+      .modal{
+        background: rgba(255,255,255,.98);
+        border:1px solid rgba(0,0,0,.10);
+        box-shadow: 0 26px 75px rgba(16,21,38,.20);
+      }
+    }
+    .modal .head{
+      padding: 14px 14px 10px;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      position: sticky; top:0; background: inherit; z-index: 1;
+    }
+    @media (prefers-color-scheme: light){ .modal .head{ border-bottom: 1px solid rgba(0,0,0,.08); } }
+    .modal .head .t{ font-weight: 850; font-size: 14px; letter-spacing:.2px; }
+    .modal .body{ padding: 14px; }
+
+    .list{ display:flex; flex-direction:column; gap:10px; }
+    .listItem{
+      padding: 12px 12px;
+      border-radius: 16px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      display:flex; justify-content:space-between; gap:12px;
+      cursor:pointer;
+    }
+    @media (prefers-color-scheme: light){
+      .listItem{ border:1px solid rgba(0,0,0,.08); background: rgba(0,0,0,.03); }
+    }
+    .listItem:hover{ border-color: rgba(106,166,255,.35); }
+    .listItem .a{ display:flex; flex-direction:column; gap:4px; min-width: 0; }
+    .listItem .a .l1{ font-weight: 820; font-size: 13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .listItem .a .l2{ color: var(--muted2); font-size: 12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .listItem .b{ color: var(--muted2); font-family: var(--mono); font-size: 12px; flex:0 0 auto; align-self:center; }
+
+    .errorBar{
+      position:fixed; top:0; left:0; right:0;
+      z-index: 9999;
+      display:none;
+      padding: 10px 12px;
+      background: rgba(255, 92, 122, .18);
+      border-bottom: 1px solid rgba(255,92,122,.45);
+      backdrop-filter: blur(10px);
+    }
+    .errorBar.open{ display:block; }
+    .errorBar .inner{
+      max-width: 980px; margin: 0 auto;
+      display:flex; gap:10px; align-items:flex-start; justify-content:space-between;
+    }
+    .errorBar .msg{ font-size: 12px; line-height: 1.4; color: var(--text); white-space:pre-wrap; }
+    .errorBar .actions{ display:flex; gap:8px; align-items:center; flex:0 0 auto; }
+
+    .hidden{ display:none !important; }
+  </style>
+</head>
+<body>
+  <div id="errorBar" class="errorBar" role="alert">
+    <div class="inner">
+      <div class="msg" id="errorMsg"></div>
+      <div class="actions">
+        <button class="btn" id="btnCopyError" title="Fehler kopieren">Copy</button>
+        <button class="btn bad" id="btnCloseError" title="Schließen">✕</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="tooltip" id="tooltip"></div>
+
+  <div class="modalOverlay" id="modalOverlay">
+    <div class="modal" id="modal">
+      <div class="head">
+        <div class="t" id="modalTitle">Modal</div>
+        <button class="btn bad" id="modalClose">Schließen</button>
+      </div>
+      <div class="body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <div class="title"><span class="dot"></span> Quran Reading Trainer</div>
+        <div class="subtitle">100% offline • Ayah + Wort-Audio • Fortschritt lokal gespeichert</div>
+      </div>
+
+      <div class="controls">
+        <select id="stageSelect" class="select" title="Stufe wählen" disabled>
+
+          <option value="1">Stufe 1</option>
+          <option value="2">Stufe 2</option>
+          <option value="3">Stufe 3</option>
+          <option value="4">Stufe 4</option>
+          <option value="5">Stufe 5</option>
+          <option value="6">Stufe 6</option>
+          <option value="7">Stufe 7</option>
+        </select>
+
+        <!-- FIX: folder names exactly like your screenshot -->
+        <select id="reciterSelect" class="select" title="Rezitator" disabled>
+          <option value="abdulbasit">Abdul Basit (langsam)</option>
+          <option value="alafasy" selected>Al Afasy (normal)</option>
+          <option value="maherAlMuaiqly">Maher Al-Muaiqly (schnell)</option>
+        </select>
+
+        <button id="btnFavorites" class="btn" disabled title="Favoriten">★ Favoriten</button>
+
+        <div class="popoverWrap">
+          <button id="btnSettings" class="btn" disabled title="Settings">⚙︎ Settings</button>
+          <div id="settingsPopover" class="popover" role="dialog" aria-label="Settings">
+            <div class="title">Settings</div>
+
+            <div class="small">Sprachen (Tooltip + Übersetzungen)</div>
+            <label class="check" style="margin-bottom:8px;">
+              <input type="checkbox" id="langDE" checked />
+              <div>
+                <div style="font-weight:800; font-size:13px;">Deutsch</div>
+                <div style="color:var(--muted2); font-size:12px;">de.bubenheim</div>
+              </div>
+            </label>
+            <label class="check">
+              <input type="checkbox" id="langEN" checked />
+              <div>
+                <div style="font-weight:800; font-size:13px;">English</div>
+                <div style="color:var(--muted2); font-size:12px;">en.sahih</div>
+              </div>
+            </label>
+
+            <div class="sep"></div>
+
+            <div class="small">Wiederholen nach X Ayahs (gilt für schlecht/mittel/gut)</div>
+            <div class="row">
+              <input id="repeatAfter" class="input" type="number" min="1" max="200" step="1" value="7" style="width:110px;" />
+              <span class="pill">Empfohlen: 5–12</span>
+            </div>
+
+            <div class="sep"></div>
+
+            <div class="small">Wort-Audio-Ordner (relativ zur HTML, Default: <span style="font-family:var(--mono);">word_mp3</span>)</div>
+            <input id="wordFolder" class="input" type="text" value="word_mp3" />
+
+            <div class="sep"></div>
+
+            <div class="row between">
+              <span class="pill">Shortcuts: <span class="kbd">Space</span> Audio • <span class="kbd">1</span>/<span class="kbd">2</span>/<span class="kbd">3</span> Bewertung</span>
+              <button class="btn" id="btnResetSession" title="Session neu starten">↻ Session</button>
+              <button class="btn bad" id="btnResetProgress" title="Fortschritt komplett löschen">🗑 Fortschritt</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETUP SCREEN -->
+    <div id="setupScreen" class="grid two">
+      <div class="card pad">
+        <div class="h1">Setup</div>
+        <p class="p">
+          Wähle die JSON-Dateien lokal aus. Nichts wird online geladen.
+          <br><b>Arabisch wird jetzt direkt aus dem Scores-JSON Feld <span style="font-family:var(--mono);">text_ar</span> gerendert</b> (sauber, Unicode) – die kaputte Offline-Arabic-Map ist nicht mehr nötig.
+        </p>
+
+        <div style="height:12px;"></div>
+
+        <div class="grid" style="gap:10px;">
+          <div class="fileRow">
+            <div class="label">
+              <div class="t">Scores JSON (Pflicht)</div>
+              <div class="s">quran_all_ayah_scores_v3.json</div>
+            </div>
+            <input id="fileScores" type="file" accept=".json,application/json" />
+          </div>
+
+          <!-- now optional -->
+          <div class="fileRow">
+            <div class="label">
+              <div class="t">Arabisch JSON (optional)</div>
+              <div class="s">wird nicht benötigt (Scores->text_ar wird genutzt)</div>
+            </div>
+            <input id="fileArabic" type="file" accept=".json,application/json" />
+          </div>
+
+          <div class="fileRow">
+            <div class="label">
+              <div class="t">Deutsch Übersetzung (Pflicht)</div>
+              <div class="s">de.bubenheim.json</div>
+            </div>
+            <input id="fileDE" type="file" accept=".json,application/json" />
+          </div>
+
+          <div class="fileRow">
+            <div class="label">
+              <div class="t">English Übersetzung (Pflicht)</div>
+              <div class="s">en.sahih.json</div>
+            </div>
+            <input id="fileEN" type="file" accept=".json,application/json" />
+          </div>
+
+          <div class="fileRow">
+            <div class="label">
+              <div class="t">Wortdaten + Wort-Audio (Pflicht)</div>
+              <div class="s">quran_worddata_de_en_audio.json</div>
+            </div>
+            <input id="fileWordAudio" type="file" accept=".json,application/json" />
+          </div>
+        </div>
+
+        <div style="height:14px;"></div>
+
+        <div class="sectionTitle">Status</div>
+        <div class="status" id="statusPanel"></div>
+
+        <div style="height:14px;"></div>
+
+        <div class="sectionTitle">Start</div>
+        <div class="card" style="border-radius:18px; padding:14px; border:1px solid rgba(255,255,255,.10); background: rgba(255,255,255,.04); box-shadow:none;">
+          <div style="font-weight:850; font-size: 13px; margin-bottom:10px;">Mit welcher Absicht liest du den Quran?</div>
+
+          <label class="check" style="margin-bottom:10px;">
+            <input type="checkbox" id="intentLearn" checked />
+            <div><div style="font-weight:800; font-size:13px;">Quran lesen lernen</div></div>
+          </label>
+          <label class="check" style="margin-bottom:10px;">
+            <input type="checkbox" id="intentRuqyah" checked />
+            <div><div style="font-weight:800; font-size:13px;">Ruqyah</div></div>
+          </label>
+          <label class="check">
+            <input type="checkbox" id="intentTaqwa" checked />
+            <div><div style="font-weight:800; font-size:13px;">mehr Gottesfurcht</div></div>
+          </label>
+
+          <div style="height:10px;"></div>
+          <div class="p">(je mehr Absichten, desto mehr Hassanat)</div>
+
+          <div style="height:12px;"></div>
+          <div class="row between">
+            <span class="pill" id="startHint">Bitte alle Pflicht-Dateien laden.</span>
+            <button class="btn primary" id="btnStart">Start</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card pad">
+        <div class="sectionTitle">Offline Audio (Info)</div>
+        <p class="p" style="margin-bottom:12px;">
+          <b>Ayah-Audio</b> (deine Ordner): <span style="font-family:var(--mono);">abdulbasit/</span>, <span style="font-family:var(--mono);">alafasy/</span>, <span style="font-family:var(--mono);">maherAlMuaiqly/</span><br/>
+          Unterordner <span style="font-family:var(--mono);">001</span>…<span style="font-family:var(--mono);">114</span><br/>
+          Dateien: <span style="font-family:var(--mono);">SSSAAA.mp3</span> (z.B. <span style="font-family:var(--mono);">026018.mp3</span>)<br/>
+          Bismillah: <span style="font-family:var(--mono);">SSS000.mp3</span> (außer Sure 9)
+        </p>
+
+        <p class="p" style="margin-bottom:12px;">
+          <b>Wort-Audio</b>: Standard-Ordner <span style="font-family:var(--mono);">word_mp3/</span> neben der HTML.<br/>
+          Beim Klick wird aus <span style="font-family:var(--mono);">audioUrl</span> der Dateiname (Basename) genommen und lokal abgespielt.
+        </p>
+
+        <div class="sectionTitle">Was wird gespeichert?</div>
+        <p class="p">Nur Fortschritt + Favoriten + Notizen + Settings in <b>IndexedDB</b>.</p>
+
+        <div style="height:14px;"></div>
+
+        <div class="sectionTitle">Robustes Debugging</div>
+        <p class="p">Es gibt eine sichtbare Error-Leiste oben. Keine “silent failures”.</p>
+
+        <div style="height:12px;"></div>
+
+        <button class="btn" id="btnExport" title="Fortschritt exportieren (JSON)">⬇︎ Export</button>
+        <button class="btn" id="btnImport" title="Fortschritt importieren (JSON)" style="margin-left:10px;">⬆︎ Import</button>
+        <input id="importFile" type="file" accept=".json,application/json" class="hidden" />
+      </div>
+    </div>
+
+    <!-- TRAINER SCREEN -->
+    <div id="trainerScreen" class="hidden">
+      <div class="card trainerCard">
+        <div class="ayahHeader">
+          <div class="meta">
+            <div class="line1" id="ayahTitle">—</div>
+            <div class="line2" id="ayahSub">—</div>
+          </div>
+          <div class="ayahIcons">
+            <button class="iconbtn" id="btnFav" title="Favorit">★</button>
+            <button class="iconbtn" id="btnCopy" title="Kopieren">⧉</button>
+            <button class="iconbtn" id="btnNote" title="Notiz">✎</button>
+          </div>
+        </div>
+
+        <div class="row" style="justify-content:center; gap:10px;">
+          <button class="bigPlay" id="btnPlay" title="Ayah Audio (Space)">
+            <svg id="playIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+            <svg id="pauseIcon" class="hidden" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>
+          </button>
+          <div class="pill" id="pillProgress">—</div>
+          <div class="pill" id="pillState">—</div>
+        </div>
+
+        <div class="ayahTextWrap">
+          <div class="arabic" id="arabicLine"></div>
+          <div class="translations" id="translations"></div>
+        </div>
+
+        <div class="bottomBar">
+          <button class="btn bad" id="btnBad">schlecht <span class="kbd">1</span></button>
+          <button class="btn mid" id="btnMid">mittel <span class="kbd">2</span></button>
+          <button class="btn good" id="btnGood">gut <span class="kbd">3</span></button>
+        </div>
+        <div class="hint">Space startet/pausiert Ayah-Audio. Wort-Hover zeigt Tooltip, Wort-Klick spielt Wort-MP3.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    "use strict";
+
+    /**********************
+     * Robust Error Bar
+     **********************/
+    const errorBar = document.getElementById("errorBar");
+    const errorMsg = document.getElementById("errorMsg");
+    const btnCloseError = document.getElementById("btnCloseError");
+    const btnCopyError = document.getElementById("btnCopyError");
+    let lastErrorText = "";
+
+    function showError(err, context="") {
+      try {
+        const text = (context ? `[${context}] ` : "") + (err?.stack || err?.message || String(err));
+        lastErrorText = text;
+        errorMsg.textContent = text;
+        errorBar.classList.add("open");
+        console.error(err);
+      } catch (e) {
+        console.error("showError failed", e);
+      }
+    }
+    function hideError(){ errorBar.classList.remove("open"); }
+    btnCloseError.addEventListener("click", hideError);
+    btnCopyError.addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(lastErrorText || ""); }
+      catch {
+        const ta = document.createElement("textarea");
+        ta.value = lastErrorText || "";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        ta.remove();
+      }
+    });
+
+    window.addEventListener("error", (e) => showError(e.error || e.message, "window.onerror"));
+    window.addEventListener("unhandledrejection", (e) => showError(e.reason || e, "unhandledrejection"));
+
+    /**********************
+     * IndexedDB
+     **********************/
+    const DB_NAME = "quran_trainer_db";
+    const DB_VERSION = 1;
+    const STORE_AYAH = "ayahState";
+    const STORE_SETTINGS = "settings";
+
+    function openDB() {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open(DB_NAME, DB_VERSION);
+        req.onupgradeneeded = () => {
+          const db = req.result;
+          if (!db.objectStoreNames.contains(STORE_AYAH)) db.createObjectStore(STORE_AYAH, { keyPath: "ref" });
+          if (!db.objectStoreNames.contains(STORE_SETTINGS)) db.createObjectStore(STORE_SETTINGS, { keyPath: "key" });
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function idbGet(db, store, key) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(store, "readonly");
+        const st = tx.objectStore(store);
+        const req = st.get(key);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function idbPut(db, store, value) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(store, "readwrite");
+        const st = tx.objectStore(store);
+        const req = st.put(value);
+        req.onsuccess = () => resolve(true);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function idbGetAll(db, store) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(store, "readonly");
+        const st = tx.objectStore(store);
+        const req = st.getAll();
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function idbClear(db, store) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(store, "readwrite");
+        const st = tx.objectStore(store);
+        const req = st.clear();
+        req.onsuccess = () => resolve(true);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    /**********************
+     * App State (In-Memory JSONs)
+     **********************/
+    let scoresArr = null;          // array
+    let arabicMap = null;          // optional ref->arabic string (unused now)
+    let deMap = null;              // ref -> de string
+    let enMap = null;              // ref -> en string
+    let wordAudioMap = null;       // ref -> [{ar,de,en,audioUrl}]
+
+    // derived
+    let refToScore = new Map();    // ref -> score entry
+    let stageRefs = new Map();     // stageNumber -> array of refs
+
+    // progress cache
+    let db = null;
+    let stateCache = new Map();    // ref -> {ref, goodCount, mediumCount, mediumPassed, done, favorite, note}
+
+    // settings
+    const settings = {
+      stage: 3,
+      reciter: "alafasy",          // FIX: folder name matches your filesystem
+      repeatAfter: 7,
+      langDE: true,
+      langEN: true,
+      wordFolder: "word_mp3",
+      intentions: { learn:true, ruqyah:true, taqwa:true }
+    };
+
+    // session runtime
+    let pool = [];
+    let poolIndex = 0;
+    let reviewQueue = [];          // {ref, dueAt}
+    let showCounter = 0;
+    let currentRef = null;
+    let currentShowIndex = 0;
+
+    // audio
+    let ayahAudio = null;
+    let ayahPlaylist = [];
+    let ayahPlaylistIdx = 0;
+    let ayahPlayToken = 0;          // increments on each new play session to ignore stale events
+
+    // tooltip
+    const tooltip = document.getElementById("tooltip");
+    let tooltipVisible = false;
+
+    /**********************
+     * UI Elements
+     **********************/
+    const setupScreen = document.getElementById("setupScreen");
+    const trainerScreen = document.getElementById("trainerScreen");
+
+    const statusPanel = document.getElementById("statusPanel");
+    const startHint = document.getElementById("startHint");
+    const btnStart = document.getElementById("btnStart");
+
+    const stageSelect = document.getElementById("stageSelect");
+    const reciterSelect = document.getElementById("reciterSelect");
+    const btnSettings = document.getElementById("btnSettings");
+    const settingsPopover = document.getElementById("settingsPopover");
+    const btnFavorites = document.getElementById("btnFavorites");
+
+    const langDE = document.getElementById("langDE");
+    const langEN = document.getElementById("langEN");
+    const repeatAfterInput = document.getElementById("repeatAfter");
+    const wordFolderInput = document.getElementById("wordFolder");
+    const btnResetSession = document.getElementById("btnResetSession");
+    const btnResetProgress = document.getElementById("btnResetProgress");
+
+    const ayahTitle = document.getElementById("ayahTitle");
+    const ayahSub = document.getElementById("ayahSub");
+    const arabicLine = document.getElementById("arabicLine");
+    const translations = document.getElementById("translations");
+
+    const btnPlay = document.getElementById("btnPlay");
+    const playIcon = document.getElementById("playIcon");
+    const pauseIcon = document.getElementById("pauseIcon");
+
+    const btnBad = document.getElementById("btnBad");
+    const btnMid = document.getElementById("btnMid");
+    const btnGood = document.getElementById("btnGood");
+
+    const pillProgress = document.getElementById("pillProgress");
+    const pillState = document.getElementById("pillState");
+
+    const btnFav = document.getElementById("btnFav");
+    const btnCopy = document.getElementById("btnCopy");
+    const btnNote = document.getElementById("btnNote");
+
+    const intentLearn = document.getElementById("intentLearn");
+    const intentRuqyah = document.getElementById("intentRuqyah");
+    const intentTaqwa = document.getElementById("intentTaqwa");
+
+    const fileScores = document.getElementById("fileScores");
+    const fileArabic = document.getElementById("fileArabic");
+    const fileDE = document.getElementById("fileDE");
+    const fileEN = document.getElementById("fileEN");
+    const fileWordAudio = document.getElementById("fileWordAudio");
+
+    const btnExport = document.getElementById("btnExport");
+    const btnImport = document.getElementById("btnImport");
+    const importFile = document.getElementById("importFile");
+
+    // modal
+    const modalOverlay = document.getElementById("modalOverlay");
+    const modalTitle = document.getElementById("modalTitle");
+    const modalBody = document.getElementById("modalBody");
+    const modalClose = document.getElementById("modalClose");
+
+    function openModal(title, htmlNodeOrString) {
+      modalTitle.textContent = title;
+      modalBody.innerHTML = "";
+      if (typeof htmlNodeOrString === "string") modalBody.innerHTML = htmlNodeOrString;
+      else if (htmlNodeOrString instanceof Node) modalBody.appendChild(htmlNodeOrString);
+      modalOverlay.classList.add("open");
+    }
+    function closeModal() { modalOverlay.classList.remove("open"); }
+    modalClose.addEventListener("click", closeModal);
+    modalOverlay.addEventListener("click", (e) => { if (e.target === modalOverlay) closeModal(); });
+
+    /**********************
+     * Helpers
+     **********************/
+    function pad3(n){ return String(n).padStart(3,"0"); }
+
+    function scoreToStage(score) {
+  // Stage mapping per user requirement:
+  // Stage 1: score <= 1.9
+  // Stage 2: 1.9 < score < 3
+  // Stage 3: 3 <= score < 4
+  // Stage 4: 4 <= score < 5
+  // Stage 5: 5 <= score < 7
+  // Stage 6: 7 <= score < 8
+  // Stage 7: 8 <= score
+  const s = Number(score);
+  if (!Number.isFinite(s)) return 1;
+  if (s <= 1.9) return 1;
+  if (s < 3) return 2;
+  if (s < 4) return 3;
+  if (s < 5) return 4;
+  if (s < 7) return 5;
+  if (s < 8) return 6;
+  return 7;
+}
+
+    function getOrInitState(ref) {
+      let st = stateCache.get(ref);
+      if (!st) {
+        st = { ref, goodCount:0, mediumCount:0, mediumPassed:false, done:false, favorite:false, note:"" };
+        stateCache.set(ref, st);
+      }
+      st.goodCount = Math.max(0, Math.min(2, Number(st.goodCount)||0));
+      st.mediumCount = Math.max(0, Math.min(2, Number(st.mediumCount)||0));
+      st.mediumPassed = Boolean(st.mediumPassed) || st.mediumCount >= 2;
+      st.done = Boolean(st.done) || st.goodCount >= 2;
+      st.favorite = Boolean(st.favorite);
+      st.note = String(st.note || "");
+      return st;
+    }
+
+    async function persistState(ref) {
+      const st = getOrInitState(ref);
+      try { await idbPut(db, STORE_AYAH, st); }
+      catch (e) { showError(e, "persistState"); }
+    }
+
+    async function persistSetting(key, value) {
+      try { await idbPut(db, STORE_SETTINGS, { key, value }); }
+      catch (e) { showError(e, "persistSetting"); }
+    }
+
+    function updateSettingsFromUI() {
+      settings.langDE = !!langDE.checked;
+      settings.langEN = !!langEN.checked;
+      if (!settings.langDE && !settings.langEN) { settings.langDE = true; langDE.checked = true; }
+
+      settings.repeatAfter = Math.max(1, Math.min(200, Number(repeatAfterInput.value || 7)));
+      repeatAfterInput.value = String(settings.repeatAfter);
+
+      settings.wordFolder = String(wordFolderInput.value || "word_mp3").trim() || "word_mp3";
+      wordFolderInput.value = settings.wordFolder;
+
+      settings.stage = Math.max(1, Number(stageSelect.value || settings.stage) || 1);
+      settings.reciter = String(reciterSelect.value || settings.reciter);
+
+      settings.intentions = {
+        learn: !!intentLearn.checked,
+        ruqyah: !!intentRuqyah.checked,
+        taqwa: !!intentTaqwa.checked
+      };
+    }
+
+    async function saveSettingsToDB() { await persistSetting("settings", { ...settings }); }
+
+    async function loadSettingsFromDB() {
+      try {
+        const s = await idbGet(db, STORE_SETTINGS, "settings");
+        if (s?.value && typeof s.value === "object") {
+          const v = s.value;
+          settings.stage = Math.max(1, Number(v.stage || settings.stage) || 1);
+          settings.reciter = String(v.reciter || settings.reciter);
+          settings.repeatAfter = Math.max(1, Math.min(200, Number(v.repeatAfter || settings.repeatAfter)));
+          settings.langDE = v.langDE !== false;
+          settings.langEN = v.langEN !== false;
+          if (!settings.langDE && !settings.langEN) settings.langDE = true;
+          settings.wordFolder = String(v.wordFolder || settings.wordFolder);
+          settings.intentions = v.intentions || settings.intentions;
+        }
+      } catch (e) { showError(e, "loadSettingsFromDB"); }
+
+      stageSelect.value = String(settings.stage);
+      reciterSelect.value = settings.reciter;
+      repeatAfterInput.value = String(settings.repeatAfter);
+      langDE.checked = settings.langDE;
+      langEN.checked = settings.langEN;
+      wordFolderInput.value = settings.wordFolder;
+      intentLearn.checked = !!settings.intentions.learn;
+      intentRuqyah.checked = !!settings.intentions.ruqyah;
+      intentTaqwa.checked = !!settings.intentions.taqwa;
+    }
+
+    function setTrainerEnabled(on) {
+      stageSelect.disabled = !on;
+      reciterSelect.disabled = !on;
+      btnSettings.disabled = !on;
+      btnFavorites.disabled = !on;
+      btnFav.disabled = !on;
+      btnCopy.disabled = !on;
+      btnNote.disabled = !on;
+      btnPlay.disabled = !on;
+      btnBad.disabled = !on;
+      btnMid.disabled = !on;
+      btnGood.disabled = !on;
+    }
+
+    function anyMissingFiles() {
+      const missing = [];
+      if (!scoresArr) missing.push("Scores");
+      if (!deMap) missing.push("Deutsch");
+      if (!enMap) missing.push("English");
+      if (!wordAudioMap) missing.push("Wortdaten+Audio");
+      return missing;
+    }
+
+    function renderStatus() {
+      const items = [
+        { key:"Scores", ok: !!scoresArr, extra: scoresArr ? `${scoresArr.length} Ayahs` : "" },
+        { key:"Arabisch", ok: !!scoresArr, extra: scoresArr ? `aus Scores.text_ar` : "" }, // always ok when scores loaded
+        { key:"Deutsch", ok: !!deMap, extra: deMap ? `${Object.keys(deMap).length} Ayahs` : "" },
+        { key:"English", ok: !!enMap, extra: enMap ? `${Object.keys(enMap).length} Ayahs` : "" },
+        { key:"Wortdaten+Audio", ok: !!wordAudioMap, extra: wordAudioMap ? `${Object.keys(wordAudioMap).length} Ayahs` : "" },
+      ];
+      statusPanel.innerHTML = "";
+      for (const it of items) {
+        const div = document.createElement("div");
+        div.className = "item";
+        div.innerHTML = `
+          <span>${it.key}${it.extra ? ` <span style="color:var(--muted2);">(${it.extra})</span>` : ""}</span>
+          <span class="${it.ok ? "ok" : "no"}">${it.ok ? "geladen" : "nicht geladen"}</span>
+        `;
+        statusPanel.appendChild(div);
+      }
+      const missing = anyMissingFiles();
+      startHint.textContent = missing.length ? `Fehlt: ${missing.join(", ")}` : "Alles geladen. Du kannst starten.";
+    }
+
+    function toggleSettingsPopover(force) {
+      const open = typeof force === "boolean" ? force : !settingsPopover.classList.contains("open");
+      settingsPopover.classList.toggle("open", open);
+    }
+    document.addEventListener("click", (e) => {
+      const isInside = settingsPopover.contains(e.target) || btnSettings.contains(e.target);
+      if (!isInside) toggleSettingsPopover(false);
+    });
+
+    /**********************
+     * JSON File Loader
+     **********************/
+    async function readJsonFromFile(file) {
+      return new Promise((resolve, reject) => {
+        const fr = new FileReader();
+        fr.onerror = () => reject(fr.error || new Error("FileReader error"));
+        fr.onload = () => {
+          try {
+            const txt = String(fr.result || "");
+            const data = JSON.parse(txt);
+            resolve(data);
+          } catch (e) { reject(e); }
+        };
+        fr.readAsText(file, "utf-8");
+      });
+    }
+
+    async function loadScores(file) {
+      const data = await readJsonFromFile(file);
+      if (!Array.isArray(data)) throw new Error("Scores JSON muss ein Array sein.");
+      if (data.length && (typeof data[0]?.ref !== "string" || data[0]?.ayah_score === undefined)) {
+        throw new Error("Scores JSON Format unerwartet (erwarte {ref, ayah_score, text_ar, ...}).");
+      }
+      // We rely on text_ar for Arabic rendering:
+      if (data.length && typeof data[0]?.text_ar !== "string") {
+        throw new Error("Scores JSON: Feld text_ar fehlt – benötige korrektes Arabic im Scores JSON.");
+      }
+      scoresArr = data;
+      buildDerived();
+    }
+
+    async function loadMap(file, label) {
+      const data = await readJsonFromFile(file);
+      if (!data || typeof data !== "object" || Array.isArray(data)) {
+        throw new Error(`${label} JSON muss eine Map (Objekt) sein: {"2:255":"..."}`
+        );
+      }
+      return data;
+    }
+
+    async function loadWordAudio(file) {
+      const data = await readJsonFromFile(file);
+      if (!data || typeof data !== "object" || Array.isArray(data)) {
+        throw new Error("Wortdaten+Audio JSON muss eine Map sein: {\"2:255\":[{ar,de,en,audioUrl},...] }");
+      }
+      const k = Object.keys(data)[0];
+      if (k && !Array.isArray(data[k])) throw new Error("Wortdaten+Audio: Wert muss Array sein.");
+      wordAudioMap = data;
+    }
+
+    function buildDerived() {
+      try {
+        if (!scoresArr) return;
+        refToScore = new Map();
+        stageRefs = new Map();
+        for (let i=1;i<=7;i++) stageRefs.set(i, []);
+        for (const row of scoresArr) {
+          const ref = row.ref;
+          if (!ref) continue;
+          refToScore.set(ref, row);
+          const st = scoreToStage(row.ayah_score);
+          stageRefs.get(st).push(ref);
+        }
+        for (let i=1;i<=7;i++) fisherYates(stageRefs.get(i));
+      } catch (e) {
+        showError(e, "buildDerived");
+      }
+    }
+
+    function fisherYates(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    /**********************
+     * Session + Spaced Repetition
+     **********************/
+    function resetSession(keepStage=true) {
+      reviewQueue = [];
+      pool = [];
+      poolIndex = 0;
+      showCounter = 0;
+      currentRef = null;
+      currentShowIndex = 0;
+      stopAyahAudio(true);
+
+      if (!keepStage) settings.stage = 3;
+
+      initPoolForStage(settings.stage);
+      pickNextAndRender();
+    }
+
+    async function resetProgressAll() {
+      try {
+        if (!db) throw new Error("DB nicht bereit.");
+        // Clear all ayah progress (done/medium/good), including favorites/notes
+        await idbClear(db, STORE_AYAH);
+        stateCache = new Map();
+        reviewQueue = [];
+        pool = [];
+        poolIndex = 0;
+        showCounter = 0;
+        currentRef = null;
+        currentShowIndex = 0;
+        stopAyahAudio(true);
+
+        // UI refresh
+        if (scoresArr) {
+          initPoolForStage(settings.stage);
+        }
+        renderStatus();
+        if (!trainerScreen.classList.contains("hidden")) {
+          pickNextAndRender();
+        }
+      } catch (e) {
+        showError(e, "resetProgressAll");
+      }
+    }
+
+    function initPoolForStage(stage) {
+      const refs = (stageRefs.get(Number(stage)) || []).slice();
+
+      // Standard: nur nicht-done Ayahs. Wenn eine Stufe aber komplett done ist,
+      // soll sie im Dropdown trotzdem "wiederholbar" sein -> dann nehmen wir ALLE refs.
+      const eligible = refs.filter(r => !getOrInitState(r).done);
+      const list = eligible.length ? eligible : refs;
+
+      fisherYates(list);
+      pool = list;
+      poolIndex = 0;
+    }
+
+    function dequeueDueRefs() {
+      const due = [];
+      const rest = [];
+      for (const it of reviewQueue) {
+        if (it.dueAt <= showCounter) due.push(it);
+        else rest.push(it);
+      }
+      reviewQueue = rest;
+      return due;
+    }
+
+    function pickNextRef() {
+      const due = dequeueDueRefs();
+      if (due.length) {
+        const idx = Math.floor(Math.random() * due.length);
+        const chosen = due[idx];
+        due.splice(idx,1);
+        for (const it of due) reviewQueue.push({ ref: it.ref, dueAt: showCounter });
+        return chosen.ref;
+      }
+
+      while (poolIndex < pool.length) {
+        const ref = pool[poolIndex++];
+        if (!getOrInitState(ref).done) return ref;
+      }
+
+      initPoolForStage(settings.stage);
+      if (pool.length === 0) return null;
+      return pool[poolIndex++] || null;
+    }
+
+    function scheduleRepeat(ref) {
+      const dueAt = currentShowIndex + settings.repeatAfter;
+      reviewQueue.push({ ref, dueAt });
+    }
+
+    async function applyRating(rating) {
+      if (!currentRef) return;
+      const ref = currentRef;
+      const st = getOrInitState(ref);
+
+      if (rating === "bad") {
+        scheduleRepeat(ref);
+      } else if (rating === "mid") {
+        st.mediumCount = Math.min(2, (Number(st.mediumCount)||0) + 1);
+        if (st.mediumCount >= 2) st.mediumPassed = true;
+        scheduleRepeat(ref);
+      } else if (rating === "good") {
+        st.goodCount = Math.min(2, (Number(st.goodCount)||0) + 1);
+        if (st.goodCount >= 2) st.done = true;
+        if (!st.done) scheduleRepeat(ref);
+      }
+
+      await persistState(ref);
+      updatePills(ref);
+
+      showCounter = currentShowIndex + 1;
+      pickNextAndRender();
+    }
+
+    function pickNextAndRender() {
+      try {
+        const ref = pickNextRef();
+        if (!ref) { showEndOfStage(); return; }
+        currentRef = ref;
+        currentShowIndex = showCounter;
+        renderAyah(ref);
+      } catch (e) {
+        showError(e, "pickNextAndRender");
+      }
+    }
+
+    function showEndOfStage() {
+      try {
+        stopAyahAudio(true);
+        currentRef = null;
+
+        // Find stages (2..7) that still have remaining (not done) ayahs
+        const stages = [];
+        for (let stg = 1; stg <= 7; stg++) {
+          const refs = stageRefs.get(stg) || [];
+          let remaining = 0;
+          for (const r of refs) if (!getOrInitState(r).done) remaining++;
+          stages.push({ stg, total: refs.length, remaining });
+        }
+
+        const next = stages.find(x => x.remaining > 0)?.stg || null;
+
+        const box = document.createElement("div");
+        box.className = "grid";
+        box.style.gap = "12px";
+
+        const p = document.createElement("p");
+        p.className = "p";
+        p.innerHTML = next
+          ? `Stufe <b>${settings.stage}</b> ist fertig. Du kannst direkt mit der nächsten Stufe weitermachen – ohne erneut JSONs zu laden.`
+          : `Glückwunsch 🎉 Alle Stufen (2–7) sind aktuell komplett <b>Done</b>.`;
+        box.appendChild(p);
+
+        const list = document.createElement("div");
+        list.className = "list";
+        for (const x of stages) {
+          const li = document.createElement("div");
+          li.className = "listItem";
+          li.style.cursor = (x.total ? "pointer" : "default");
+          li.innerHTML = `
+            <div class="a">
+              <div class="l1">Stufe ${x.stg}</div>
+              <div class="l2">${x.remaining}/${x.total} offen</div>
+            </div>
+            <div class="b">${x.remaining === 0 && x.total > 0 ? "Done" : (x.total === 0 ? "—" : "")}</div>
+          `;
+          li.addEventListener("click", async () => {
+            try {
+              if (!x.total) return;
+              settings.stage = x.stg;
+              stageSelect.value = String(x.stg);
+              await saveSettingsToDB();
+              closeModal();
+              resetSession(true);
+            } catch (e) { showError(e, "changeStage"); }
+          });
+          list.appendChild(li);
+        }
+        box.appendChild(list);
+
+        const row = document.createElement("div");
+        row.className = "row between";
+
+        const left = document.createElement("div");
+        left.className = "pill";
+        left.textContent = "Tipp: Du kannst auch oben die Stufe im Dropdown wechseln.";
+
+        const right = document.createElement("div");
+        right.className = "row";
+        right.style.gap = "10px";
+        right.style.justifyContent = "flex-end";
+
+        if (next) {
+          const btnNext = document.createElement("button");
+          btnNext.className = "btn primary";
+          btnNext.textContent = `Nächste Stufe (${next})`;
+          btnNext.addEventListener("click", async () => {
+            try {
+              settings.stage = next;
+              stageSelect.value = String(next);
+              await saveSettingsToDB();
+              closeModal();
+              resetSession(true);
+            } catch (e) { showError(e, "nextStage"); }
+          });
+          right.appendChild(btnNext);
+        }
+
+        const btnClose = document.createElement("button");
+        btnClose.className = "btn";
+        btnClose.textContent = "Schließen";
+        btnClose.addEventListener("click", closeModal);
+        right.appendChild(btnClose);
+
+        row.appendChild(left);
+        row.appendChild(right);
+
+        box.appendChild(row);
+
+        openModal(`Stufe ${settings.stage} fertig`, box);
+      } catch (e) {
+        showError(e, "showEndOfStage");
+      }
+    }
+
+    /**********************
+     * Arabic source (FIX)
+     **********************/
+    function getArabicText(ref) {
+      const row = refToScore.get(ref);
+      if (row?.text_ar) return row.text_ar; // primary: clean unicode
+      if (arabicMap?.[ref]) return arabicMap[ref]; // optional
+      // fallback: join worddata 'ar' (will likely be broken, but better than empty)
+      const ws = wordAudioMap?.[ref];
+      if (Array.isArray(ws)) {
+        const t = ws.map(w => (w?.ar || "")).filter(Boolean).join(" ");
+        if (t) return t;
+      }
+      return "";
+    }
+
+    function getClickableWordEntries(ref) {
+      // remove "ayah number" token where audioUrl is empty (seen in your file)
+      const ws = wordAudioMap?.[ref];
+      if (!Array.isArray(ws)) return [];
+      return ws.filter(w => w && String(w.audioUrl || "").trim().length > 0);
+    }
+
+    /**********************
+     * Rendering Ayah
+     **********************/
+    function renderAyah(ref) {
+      const scoreRow = refToScore.get(ref) || null;
+      const [sStr, aStr] = ref.split(":");
+      const surah = Number(sStr);
+      const ayah = Number(aStr);
+
+      const surahName = scoreRow?.surah_name_translit || `Surah ${surah}`;
+      const surahNameAr = scoreRow?.surah_name_ar || "";
+      ayahTitle.textContent = `${surah} • ${surahName}${surahNameAr ? ` • ${surahNameAr}` : ""}`;
+      ayahSub.textContent = `Ayah ${ayah}`;
+
+      renderArabicWithWords(ref);
+      renderTranslations(ref);
+
+      const st = getOrInitState(ref);
+      btnFav.textContent = st.favorite ? "★" : "☆";
+      btnFav.style.borderColor = st.favorite ? "rgba(255,204,102,.55)" : "";
+      btnFav.style.background = st.favorite ? "linear-gradient(180deg, rgba(255,204,102,.20), rgba(255,204,102,.10))" : "";
+
+      updatePills(ref);
+      stopAyahAudio(true);
+    }
+
+    function updatePills(ref) {
+      const st = getOrInitState(ref);
+      const doneTxt = st.done ? "Done ✅" : "In Progress";
+      const midTxt = st.mediumPassed ? "mittel-bestanden" : `mittel: ${st.mediumCount}/2`;
+      const goodTxt = `gut: ${st.goodCount}/2`;
+      pillState.textContent = `${doneTxt} • ${midTxt} • ${goodTxt}`;
+
+      const refs = stageRefs.get(Number(settings.stage)) || [];
+      let doneCount = 0;
+      for (const r of refs) if (getOrInitState(r).done) doneCount++;
+      pillProgress.textContent = `Stufe ${settings.stage}: ${doneCount}/${refs.length} done • Queue: ${reviewQueue.length}`;
+    }
+
+    function renderTranslations(ref) {
+      translations.innerHTML = "";
+      const lines = [];
+      if (settings.langDE) lines.push({ label:"Deutsch", text: deMap?.[ref] || "" });
+      if (settings.langEN) lines.push({ label:"English", text: enMap?.[ref] || "" });
+
+      for (const l of lines) {
+        const wrap = document.createElement("div");
+        wrap.style.display = "flex";
+        wrap.style.flexDirection = "column";
+        wrap.style.gap = "6px";
+        wrap.style.alignItems = "center";
+
+        const lab = document.createElement("div");
+        lab.className = "trLabel";
+        lab.textContent = l.label;
+
+        const p = document.createElement("p");
+        p.className = "trLine";
+        p.textContent = l.text || "";
+
+        wrap.appendChild(lab);
+        wrap.appendChild(p);
+        translations.appendChild(wrap);
+      }
+    }
+
+    function renderArabicWithWords(ref) {
+      arabicLine.innerHTML = "";
+      const ayahText = getArabicText(ref);
+      if (!ayahText) { arabicLine.textContent = ""; return; }
+
+      const wordEntries = getClickableWordEntries(ref);
+      const parts = ayahText.split(/\s+/).filter(Boolean);
+
+      // best case: counts match => fully clickable
+      const n = Math.min(parts.length, wordEntries.length);
+
+      for (let i=0; i<parts.length; i++) {
+        const token = parts[i];
+        if (i < n) {
+          const span = document.createElement("span");
+          span.className = "word";
+          span.textContent = token;
+          span.dataset.ref = ref;
+          span.dataset.idx = String(i);
+          span.addEventListener("mouseenter", (e) => onWordHover(e, ref, i));
+          span.addEventListener("mousemove", (e) => moveTooltip(e));
+          span.addEventListener("mouseleave", hideTooltip);
+          span.addEventListener("click", async (e) => {
+            e.preventDefault(); e.stopPropagation();
+            await playWordAudio(ref, i);
+          });
+          arabicLine.appendChild(span);
+        } else {
+          // mismatch fallback: show remaining tokens as plain text (still correct Arabic)
+          const span = document.createElement("span");
+          span.textContent = token;
+          arabicLine.appendChild(span);
+        }
+        arabicLine.appendChild(document.createTextNode(" "));
+      }
+    }
+
+    function tooltipTextForWord(ref, idx) {
+      const w = getClickableWordEntries(ref)?.[idx];
+      if (!w) return "";
+      const parts = [];
+      if (settings.langDE && w.de) parts.push(`DE: ${w.de}`);
+      if (settings.langEN && w.en) parts.push(`EN: ${w.en}`);
+      return parts.join("\n");
+    }
+
+    function onWordHover(e, ref, idx) {
+      const t = tooltipTextForWord(ref, idx);
+      if (!t) return;
+      tooltip.textContent = t;
+      tooltip.style.display = "block";
+      tooltipVisible = true;
+      moveTooltip(e);
+    }
+    function moveTooltip(e) {
+      if (!tooltipVisible) return;
+      const pad = 12;
+      const x = Math.min(window.innerWidth - pad, e.clientX + 14);
+      const y = Math.min(window.innerHeight - pad, e.clientY + 16);
+      tooltip.style.left = x + "px";
+      tooltip.style.top = y + "px";
+    }
+    function hideTooltip() { tooltipVisible = false; tooltip.style.display = "none"; }
+
+    /**********************
+     * Word Audio (local MP3 + optional speechSynthesis fallback)
+     **********************/
+    async function playWordAudio(ref, idx) {
+      try {
+        const w = getClickableWordEntries(ref)?.[idx];
+        if (!w) return;
+
+        const url = String(w.audioUrl || "").trim();
+        const base = url ? url.split("/").pop() : "";
+        if (base) {
+          const folder = settings.wordFolder.replace(/\/$/,"");
+          const src = `${folder}/${base}`;
+          const a = new Audio(src);
+          a.preload = "none";
+          await a.play().catch(async () => { await speechFallback(w); });
+          return;
+        }
+        await speechFallback(w);
+      } catch (e) {
+        showError(e, "playWordAudio");
+      }
+    }
+
+    async function speechFallback(wordObj) {
+      try {
+        if (!("speechSynthesis" in window)) return;
+        const u = new SpeechSynthesisUtterance();
+        u.text = String(wordObj?.ar || "").trim() || String(wordObj?.en || wordObj?.de || "").trim();
+        u.lang = "ar";
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(u);
+      } catch (e) {
+        showError(e, "speechFallback");
+      }
+    }
+
+    /**********************
+     * Ayah Audio (local MP3 by reciter + spacebar)
+     **********************/
+    function ayahAudioPath(reciterFolder, surah, ayah) {
+      const s = pad3(surah);
+      const a = pad3(ayah);
+      return `${reciterFolder}/${s}/${s}${a}.mp3`;
+    }
+    function bismillahPath(reciterFolder, surah) {
+      const s = pad3(surah);
+      return `${reciterFolder}/${s}/${s}000.mp3`;
+    }
+
+    function buildAyahPlaylist(ref) {
+      const [sStr, aStr] = ref.split(":");
+      const surah = Number(sStr);
+      const ayah = Number(aStr);
+      const folder = settings.reciter; // FIX: abdulbasit/alafasy/maherAlMuaiqly
+
+      const list = [];
+      if (ayah === 1 && surah !== 1 && surah !== 9) list.push(bismillahPath(folder, surah));
+      list.push(ayahAudioPath(folder, surah, ayah));
+      return list;
+    }
+
+    function stopAyahAudio(resetUI) {
+      try {
+        ayahPlayToken++; // ignore stale events from a previous src
+        if (ayahAudio) { ayahAudio.pause(); ayahAudio.src = ""; ayahAudio = null; }
+        ayahPlaylist = [];
+        ayahPlaylistIdx = 0;
+        if (resetUI) setPlayUI(false);
+      } catch (e) { showError(e, "stopAyahAudio"); }
+    }
+
+    function setPlayUI(playing) {
+      playIcon.classList.toggle("hidden", playing);
+      pauseIcon.classList.toggle("hidden", !playing);
+    }
+
+    async function toggleAyahAudio() {
+      try {
+        if (!currentRef) return;
+        if (ayahAudio && ayahAudio.src) {
+          if (ayahAudio.paused) { await ayahAudio.play(); setPlayUI(true); }
+          else { ayahAudio.pause(); setPlayUI(false); }
+          return;
+        }
+        ayahPlaylist = buildAyahPlaylist(currentRef);
+        ayahPlaylistIdx = 0;
+        ayahPlayToken++; // invalidate any stale error/ended events
+        await playPlaylistItem(ayahPlayToken);
+      } catch (e) {
+        showError(e, "toggleAyahAudio");
+      }
+    }
+
+    async function playPlaylistItem(token) {
+      try {
+        if (token !== ayahPlayToken) return;
+        const src = ayahPlaylist[ayahPlaylistIdx];
+        if (!src) { stopAyahAudio(true); return; }
+
+        if (!ayahAudio) {
+          ayahAudio = new Audio();
+          ayahAudio.preload = "none";
+          ayahAudio.addEventListener("ended", async () => {
+            try {
+              if (token !== ayahPlayToken) return;
+              ayahPlaylistIdx++;
+              if (ayahPlaylistIdx < ayahPlaylist.length) await playPlaylistItem(token);
+              else stopAyahAudio(true);
+            } catch (e) { showError(e, "ayahAudio.ended"); }
+          });
+          ayahAudio.addEventListener("error", () => {
+            try {
+              // Some browsers can emit transient "error" events on file:// even though playback works.
+              // We therefore only surface an error if it still looks unplayable after a short delay,
+              // AND if this event belongs to the currently active play token + expected src.
+              const expectedSrc = ayahAudio?._expectedSrc || "";
+              const expectedToken = ayahAudio?._expectedToken || 0;
+
+              setTimeout(() => {
+                try {
+                  if (!ayahAudio) return;
+                  if (expectedToken !== ayahPlayToken) return;
+                  if ((ayahAudio._expectedSrc || "") !== expectedSrc) return;
+
+                  const actuallyPlaying = !ayahAudio.paused && ayahAudio.currentTime > 0;
+                  if (actuallyPlaying) return;
+                  if (ayahAudio.readyState >= 2) return; // HAVE_CURRENT_DATA or better => it's fine
+
+                  showError(new Error(`Ayah-Audio nicht gefunden oder nicht abspielbar: ${expectedSrc}`), "AyahAudio");
+                  stopAyahAudio(true);
+                } catch (e) { showError(e, "AyahAudio.error.check"); }
+              }, 250);
+            } catch (e) { showError(e, "AyahAudio.error"); }
+          });
+        }
+
+        ayahAudio._expectedSrc = src;
+        ayahAudio._expectedToken = token;
+        ayahAudio.src = src;
+        try {
+          await ayahAudio.play();
+        } catch (err) {
+          // Promise rejection is the most reliable signal that playback truly failed.
+          showError(new Error(`Ayah-Audio nicht gefunden oder nicht abspielbar: ${src}`), "AyahAudio");
+          stopAyahAudio(true);
+          return;
+        }
+        setPlayUI(true);
+      } catch (e) {
+        showError(e, "playPlaylistItem");
+        stopAyahAudio(true);
+      }
+    }
+
+    /**********************
+     * Favorites / Copy / Notes
+     **********************/
+    btnFav.addEventListener("click", async () => {
+      try {
+        if (!currentRef) return;
+        const st = getOrInitState(currentRef);
+        st.favorite = !st.favorite;
+        await persistState(currentRef);
+        renderAyah(currentRef);
+      } catch (e) { showError(e, "btnFav"); }
+    });
+
+    btnCopy.addEventListener("click", async () => {
+      try {
+        if (!currentRef) return;
+        const ar = getArabicText(currentRef) || "";
+        const de = settings.langDE ? (deMap?.[currentRef] || "") : "";
+        const en = settings.langEN ? (enMap?.[currentRef] || "") : "";
+        const parts = [ar];
+        if (de) parts.push(de);
+        if (en) parts.push(en);
+        const txt = parts.filter(Boolean).join("\n\n");
+
+        await navigator.clipboard.writeText(txt).catch(() => {
+          const ta = document.createElement("textarea");
+          ta.value = txt;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand("copy");
+          ta.remove();
+        });
+      } catch (e) { showError(e, "btnCopy"); }
+    });
+
+    btnNote.addEventListener("click", async () => {
+      try {
+        if (!currentRef) return;
+        const st = getOrInitState(currentRef);
+
+        const box = document.createElement("div");
+        box.className = "grid";
+        box.style.gap = "10px";
+
+        const p = document.createElement("p");
+        p.className = "p";
+        p.textContent = `Notiz für ${currentRef} (wird lokal gespeichert).`;
+
+        const ta = document.createElement("textarea");
+        ta.value = st.note || "";
+        ta.style.width = "100%";
+        ta.style.minHeight = "160px";
+        ta.style.resize = "vertical";
+        ta.style.borderRadius = "16px";
+        ta.style.border = "1px solid rgba(255,255,255,.14)";
+        ta.style.background = "rgba(255,255,255,.04)";
+        ta.style.color = "var(--text)";
+        ta.style.padding = "12px";
+        ta.style.fontFamily = "var(--sans)";
+        ta.style.outline = "none";
+        ta.addEventListener("focus", () => ta.style.boxShadow = "var(--focus)");
+        ta.addEventListener("blur", () => ta.style.boxShadow = "none");
+
+        const row = document.createElement("div");
+        row.className = "row between";
+
+        const btnSave = document.createElement("button");
+        btnSave.className = "btn primary";
+        btnSave.textContent = "Speichern";
+
+        const btnDelete = document.createElement("button");
+        btnDelete.className = "btn bad";
+        btnDelete.textContent = "Löschen";
+
+        row.appendChild(btnDelete);
+        row.appendChild(btnSave);
+
+        box.appendChild(p);
+        box.appendChild(ta);
+        box.appendChild(row);
+
+        btnSave.addEventListener("click", async () => {
+          try { st.note = String(ta.value || ""); await persistState(currentRef); closeModal(); }
+          catch (e) { showError(e, "saveNote"); }
+        });
+
+        btnDelete.addEventListener("click", async () => {
+          try { st.note = ""; await persistState(currentRef); closeModal(); }
+          catch (e) { showError(e, "deleteNote"); }
+        });
+
+        openModal("Notiz", box);
+      } catch (e) { showError(e, "btnNote"); }
+    });
+
+    btnFavorites.addEventListener("click", async () => {
+      try {
+        const favs = [];
+        for (const [ref, st] of stateCache.entries()) if (st.favorite) favs.push(ref);
+        favs.sort((a,b) => {
+          const [as, aa] = a.split(":").map(Number);
+          const [bs, ba] = b.split(":").map(Number);
+          return as - bs || aa - ba;
+        });
+
+        const root = document.createElement("div");
+        root.className = "grid";
+        root.style.gap = "12px";
+
+        const filter = document.createElement("input");
+        filter.className = "input";
+        filter.placeholder = "Filter (z.B. 2:255 oder Wort aus Übersetzung)";
+        filter.style.width = "100%";
+        root.appendChild(filter);
+
+        const list = document.createElement("div");
+        list.className = "list";
+        root.appendChild(list);
+
+        function escapeHtml(s){
+          return String(s || "")
+            .replaceAll("&","&amp;")
+            .replaceAll("<","&lt;")
+            .replaceAll(">","&gt;")
+            .replaceAll('"',"&quot;")
+            .replaceAll("'","&#039;");
+        }
+
+        function renderList(q="") {
+          list.innerHTML = "";
+          const query = q.trim().toLowerCase();
+          const filtered = favs.filter(ref => {
+            if (!query) return true;
+            if (ref.toLowerCase().includes(query)) return true;
+            const d = (deMap?.[ref] || "").toLowerCase();
+            const e = (enMap?.[ref] || "").toLowerCase();
+            return d.includes(query) || e.includes(query);
+          });
+
+          if (!filtered.length) {
+            const p = document.createElement("p");
+            p.className = "p";
+            p.textContent = "Keine Treffer.";
+            list.appendChild(p);
+            return;
+          }
+
+          for (const ref of filtered) {
+            const row = refToScore.get(ref);
+            const [sStr, aStr] = ref.split(":");
+            const surah = Number(sStr);
+            const ayah = Number(aStr);
+            const name = row?.surah_name_translit || `Surah ${surah}`;
+            const d = deMap?.[ref] || enMap?.[ref] || "";
+            const li = document.createElement("div");
+            li.className = "listItem";
+            li.innerHTML = `
+              <div class="a">
+                <div class="l1">${name} • Ayah ${ayah}</div>
+                <div class="l2">${escapeHtml(d).slice(0, 120)}${d.length>120 ? "…" : ""}</div>
+              </div>
+              <div class="b">${ref}</div>
+            `;
+            li.addEventListener("click", () => {
+              closeModal();
+              stopAyahAudio(true);
+              currentRef = ref;
+              currentShowIndex = showCounter;
+              renderAyah(ref);
+            });
+            list.appendChild(li);
+          }
+        }
+
+        filter.addEventListener("input", () => renderList(filter.value || ""));
+        renderList("");
+
+        openModal("Favoriten", root);
+      } catch (e) { showError(e, "btnFavorites"); }
+    });
+
+    /**********************
+     * Export / Import progress
+     **********************/
+    btnExport.addEventListener("click", async () => {
+      try {
+        if (!db) throw new Error("DB nicht bereit.");
+        const all = await idbGetAll(db, STORE_AYAH);
+        const payload = { exportedAt: new Date().toISOString(), settings, ayahState: all };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "quran_trainer_progress.json";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 8000);
+      } catch (e) { showError(e, "Export"); }
+    });
+
+    btnImport.addEventListener("click", () => importFile.click());
+    importFile.addEventListener("change", async () => {
+      try {
+        const f = importFile.files?.[0];
+        importFile.value = "";
+        if (!f) return;
+        const data = await readJsonFromFile(f);
+        if (!data || typeof data !== "object") throw new Error("Import-Datei ungültig.");
+        const arr = data.ayahState;
+        if (!Array.isArray(arr)) throw new Error("Import: ayahState fehlt oder ist kein Array.");
+        for (const st of arr) {
+          if (!st?.ref) continue;
+          const cur = getOrInitState(st.ref);
+          cur.goodCount = Math.max(cur.goodCount||0, Number(st.goodCount)||0);
+          cur.mediumCount = Math.max(cur.mediumCount||0, Number(st.mediumCount)||0);
+          cur.mediumPassed = Boolean(cur.mediumPassed) || Boolean(st.mediumPassed) || cur.mediumCount>=2;
+          cur.done = Boolean(cur.done) || Boolean(st.done) || cur.goodCount>=2;
+          cur.favorite = Boolean(cur.favorite) || Boolean(st.favorite);
+          if (String(st.note || "").trim()) cur.note = String(st.note);
+          await persistState(st.ref);
+        }
+        if (data.settings && typeof data.settings === "object") {
+          Object.assign(settings, data.settings);
+          await saveSettingsToDB();
+        }
+        await loadStateCache();
+        await loadSettingsFromDB();
+        renderStatus();
+        showError(new Error("Import erfolgreich."), "Info");
+      } catch (e) { showError(e, "Import"); }
+    });
+
+    /**********************
+     * Event wiring
+     **********************/
+    btnSettings.addEventListener("click", () => toggleSettingsPopover());
+    langDE.addEventListener("change", async () => { updateSettingsFromUI(); await saveSettingsToDB(); if (currentRef) renderAyah(currentRef); });
+    langEN.addEventListener("change", async () => { updateSettingsFromUI(); await saveSettingsToDB(); if (currentRef) renderAyah(currentRef); });
+    repeatAfterInput.addEventListener("change", async () => { updateSettingsFromUI(); await saveSettingsToDB(); });
+    wordFolderInput.addEventListener("change", async () => { updateSettingsFromUI(); await saveSettingsToDB(); });
+
+    btnResetSession.addEventListener("click", async () => {
+      try { updateSettingsFromUI(); await saveSettingsToDB(); if (!scoresArr) return; resetSession(true); }
+      catch (e) { showError(e, "ResetSession"); }
+    });
+
+    btnResetProgress.addEventListener("click", async () => {
+      try {
+        const box = document.createElement("div");
+        box.className = "grid";
+        box.style.gap = "12px";
+
+        const p = document.createElement("p");
+        p.className = "p";
+        p.innerHTML = "<b>Achtung:</b> Das löscht den gesamten Fortschritt (Done/Mittel/Gut), Favoriten und Notizen lokal aus IndexedDB. Deine geladenen JSONs bleiben im Speicher (kein Neu-Setup nötig).";
+
+        const row = document.createElement("div");
+        row.className = "row between";
+
+        const cancel = document.createElement("button");
+        cancel.className = "btn";
+        cancel.textContent = "Abbrechen";
+
+        const ok = document.createElement("button");
+        ok.className = "btn bad";
+        ok.textContent = "Ja, löschen";
+
+        row.appendChild(cancel);
+        row.appendChild(ok);
+
+        box.appendChild(p);
+        box.appendChild(row);
+
+        cancel.addEventListener("click", () => closeModal());
+        ok.addEventListener("click", async () => {
+          closeModal();
+          await resetProgressAll();
+        });
+
+        openModal("Fortschritt zurücksetzen", box);
+      } catch (e) { showError(e, "ResetProgress"); }
+    });
+
+    stageSelect.addEventListener("change", async () => {
+      try { updateSettingsFromUI(); await saveSettingsToDB(); resetSession(true); }
+      catch (e) { showError(e, "stageSelect"); }
+    });
+    reciterSelect.addEventListener("change", async () => {
+      try { updateSettingsFromUI(); await saveSettingsToDB(); stopAyahAudio(true); }
+      catch (e) { showError(e, "reciterSelect"); }
+    });
+
+    btnPlay.addEventListener("click", () => toggleAyahAudio());
+    btnBad.addEventListener("click", () => applyRating("bad"));
+    btnMid.addEventListener("click", () => applyRating("mid"));
+    btnGood.addEventListener("click", () => applyRating("good"));
+
+    document.addEventListener("keydown", (e) => {
+      const tag = (document.activeElement?.tagName || "").toLowerCase();
+      if (tag === "input" || tag === "textarea" || document.activeElement?.isContentEditable) return;
+      if (trainerScreen.classList.contains("hidden")) return;
+
+      if (e.code === "Space") { e.preventDefault(); toggleAyahAudio(); }
+      else if (e.key === "1") applyRating("bad");
+      else if (e.key === "2") applyRating("mid");
+      else if (e.key === "3") applyRating("good");
+    });
+
+    fileScores.addEventListener("change", async () => {
+      try { const f = fileScores.files?.[0]; if (!f) return; await loadScores(f); renderStatus(); }
+      catch (e) { showError(e, "loadScores"); renderStatus(); }
+    });
+
+    // optional (kept for compatibility, but not required)
+    fileArabic.addEventListener("change", async () => {
+      try { const f = fileArabic.files?.[0]; if (!f) return; arabicMap = await loadMap(f, "Arabisch"); renderStatus(); }
+      catch (e) { showError(e, "loadArabic"); renderStatus(); }
+    });
+
+    fileDE.addEventListener("change", async () => {
+      try { const f = fileDE.files?.[0]; if (!f) return; deMap = await loadMap(f, "Deutsch"); renderStatus(); }
+      catch (e) { showError(e, "loadDE"); renderStatus(); }
+    });
+
+    fileEN.addEventListener("change", async () => {
+      try { const f = fileEN.files?.[0]; if (!f) return; enMap = await loadMap(f, "English"); renderStatus(); }
+      catch (e) { showError(e, "loadEN"); renderStatus(); }
+    });
+
+    fileWordAudio.addEventListener("change", async () => {
+      try { const f = fileWordAudio.files?.[0]; if (!f) return; await loadWordAudio(f); renderStatus(); }
+      catch (e) { showError(e, "loadWordAudio"); renderStatus(); }
+    });
+
+    btnStart.addEventListener("click", async () => {
+      try {
+        updateSettingsFromUI();
+        const missing = anyMissingFiles();
+        if (missing.length) {
+          startHint.textContent = `Fehlt: ${missing.join(", ")}`;
+          throw new Error(`Start nicht möglich. Fehlt: ${missing.join(", ")}`);
+        }
+
+        setTrainerEnabled(true);
+        setupScreen.classList.add("hidden");
+        trainerScreen.classList.remove("hidden");
+
+        if (!stageRefs || stageRefs.size === 0) buildDerived();
+        resetSession(true);
+
+        await saveSettingsToDB();
+      } catch (e) { showError(e, "Start"); }
+    });
+
+    /**********************
+     * Bootstrap
+     **********************/
+    async function loadStateCache() {
+      try {
+        const all = await idbGetAll(db, STORE_AYAH);
+        stateCache = new Map();
+        for (const st of all) if (st?.ref) stateCache.set(st.ref, st);
+      } catch (e) { showError(e, "loadStateCache"); }
+    }
+
+    async function init() {
+      try {
+        db = await openDB();
+        await loadStateCache();
+        await loadSettingsFromDB();
+        setTrainerEnabled(false);
+        renderStatus();
+
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "Escape" && modalOverlay.classList.contains("open")) closeModal();
+        });
+      } catch (e) {
+        showError(e, "init");
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

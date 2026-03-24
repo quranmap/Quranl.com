@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <script>
+  try {
+    const t = localStorage.getItem("quranm_theme_v1");
+    if (t === "light" || t === "dark") {
+      document.documentElement.setAttribute("data-theme", t);
+    }
+  } catch (e) {}
+</script>
+  <title>Quran Map – Ornament Version</title>
+  <link rel="stylesheet" href="app.css" />
+
+  <!-- ✅ App früh laden: verhindert 1. falschen “komisch”-Paint -->
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <div id="viewportRoot">
+    <div id="frame">
+      <div class="bar bar-left" aria-hidden="true"></div>
+
+      <div class="stage" id="stage">
+        <div class="statusbar" id="statusbar">
+          <div class="suraProg" id="suraProg">
+            <div class="progress" id="progress"></div>
+            <div class="suraProgTicks" id="suraProgTicks" aria-label="Surah progress ticks"></div>
+          </div>
+
+<!-- ✅ Favorites Button (Statusbar) -->
+<button class="favBtnBtn" id="favBtnBtn" type="button" aria-label="Favorites">
+  <span class="favText" id="favText">Favorites</span>
+  <span class="favCount" id="favCount">0</span>
+</button>
+
+<!-- ✅ Style Picker (Statusbar) -->
+<div class="stylePicker" id="stylePicker" aria-label="Style picker">
+  <button class="styleBtn" id="styleBtn" type="button" aria-label="Style" title="Style">
+    <svg class="styleIcon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 2l1.1 3.6L17 7l-3.9 1.4L12 12l-1.1-3.6L7 7l3.9-1.4L12 2z" fill="currentColor"/>
+      <path d="M19 11l.7 2.2L22 14l-2.3.8L19 17l-.7-2.2L16 14l2.3-.8L19 11z" fill="currentColor" opacity=".85"/>
+    </svg>
+  </button>
+  
+  <!-- Menü (einzeilig nach rechts) -->
+  <div class="styleMenu" id="styleMenu" role="menu" aria-label="Style menu"></div>
+</div>
+
+<!-- ✅ Surface Picker (Statusbar) -->
+<div class="surfacePicker" id="surfacePicker" aria-label="Surface theme picker">
+  <button class="surfaceBtn" id="surfaceBtn" type="button" aria-label="Surface theme" title="Surface theme">
+    <!-- simple “layers” icon -->
+    <svg class="surfaceIcon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 3l9 5-9 5-9-5 9-5z" fill="currentColor" opacity=".9"/>
+      <path d="M3 12l9 5 9-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" opacity=".8"/>
+      <path d="M3 16l9 5 9-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" opacity=".6"/>
+    </svg>
+  </button>
+
+  <div class="surfaceMenu" id="surfaceMenu" role="menu" aria-label="Surface theme menu"></div>
+</div>
+
+<!-- ✅ Account Picker (Statusbar) -->
+<div class="acctPicker" id="acctPicker" aria-label="Account">
+  <button class="acctBtn" id="acctBtn" type="button" aria-label="Account" title="Account">
+    <svg class="acctIcon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 12a4.2 4.2 0 1 0-4.2-4.2A4.2 4.2 0 0 0 12 12zm0 2.2c-4.3 0-7.8 2.2-7.8 5v.8h15.6v-.8c0-2.8-3.5-5-7.8-5z" fill="currentColor"/>
+    </svg>
+  </button>
+
+  <div class="acctMenu" id="acctMenu" role="dialog" aria-label="Account menu">
+    <div class="acctTitleRow">
+      <div class="acctTitle">Account</div>
+      <button class="acctClose" id="acctClose" type="button" aria-label="Close" title="Close">✕</button>
+    </div>
+
+    <div class="acctTopInfo">
+      <div class="acctScorePill" aria-label="Reader score">
+        <div class="acctScoreLabelWrap">
+          <span class="acctScoreLabel">Reader score</span>
+          <span
+            class="acctScoreHelp"
+            data-reader-help="reader-score-account"
+            data-reader-help-title="Reader score"
+            data-reader-help-text="this is a score to track your progress reading the quran fluently"
+            aria-label="this is a score to track your progress reading the quran fluently">?</span>
+          <span class="acctScoreValue" id="acctScoreValue">0/1000000000</span>
+        </div>
+      </div>
+
+      <div class="acctScorePill acctHifzPill" aria-label="Hifzscore">
+        <div class="acctScoreLabelWrap">
+          <span class="acctScoreLabel">Hifzscore</span>
+          <span
+            class="acctScoreHelp"
+            data-hifz-help="hifzscore-account"
+            data-hifz-help-title="Hifzscore"
+            data-hifz-help-text="this is a score to memorize the quran in 10 different difficulty stages. visit quranf.com to take part"
+            aria-label="this is a score to memorize the quran in 10 different difficulty stages. visit quranf.com to take part">?</span>
+          <span class="acctScoreValue acctHifzScoreValue" id="acctHifzScoreValue">—</span>
+        </div>
+      </div>
+
+      <div class="acctSyncCard" aria-label="Sync status">
+        <div class="acctSyncMeta">
+          <div class="acctSyncLabel">Sync status</div>
+          <div class="acctSyncLabel">Last sync</div>
+        </div>
+
+        <div class="acctSyncValues">
+          <div class="acctSyncState" id="acctSyncState">Offline</div>
+          <div class="acctSyncTime" id="acctSyncTime">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="acctRow">
+      <input id="acctUsername" class="acctInput" type="text" autocomplete="username"
+             placeholder="example Muhammad114" aria-label="Username">
+      <input id="acctPassword" class="acctInput" type="password" autocomplete="current-password"
+             placeholder="Password" aria-label="Password">
+      <button id="acctLoginBtn" class="acctBtnSmall" type="button">Log in</button>
+      <button id="acctCreateBtn" class="acctBtnSmall acctBtnPrimary" type="button">Create account</button>
+    </div>
+
+    <div id="acctMsg" class="acctMsg" aria-live="polite"></div>
+
+    <div class="acctLoadSaveStack">
+      <button id="acctLoadBtn" class="acctBtnSmall" type="button">Load account</button>
+      <button id="acctSaveBtn" class="acctBtnSmall" type="button">Save device</button>
+    </div>
+
+    <div class="acctLoadSaveStack acctRowBottom">
+      <button id="acctExportBtn" class="acctBtnSmall" type="button">Export settings</button>
+
+      <label class="acctImportLabel">
+        <input id="acctImportFile" type="file" accept="application/json" hidden>
+        <span class="acctBtnSmall">Import settings</span>
+      </label>
+
+      <button id="acctBugBtn" class="acctBtnSmall" type="button">Report Bug</button>
+    </div>
+
+    <div class="acctBugBox" id="acctBugBox" aria-label="Bug report">
+      <div class="acctBugHead">
+        <div class="acctBugTitle">Report a bug</div>
+        <button class="acctBugClose" id="acctBugClose" type="button" aria-label="Close bug report" title="Close">✕</button>
+      </div>
+
+      <textarea
+        class="acctBugText"
+        id="acctBugText"
+        spellcheck="false"
+        placeholder="Describe the bug… (What did you do? What happened? What did you expect?)"></textarea>
+
+      <div class="acctBugActions">
+        <button id="acctBugCancel" class="acctBtnSmall" type="button">Cancel</button>
+        <button id="acctBugSend" class="acctBtnSmall acctBtnPrimary" type="button">Send</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ✅ Surah Dropdown (Statusbar) -->
+<div class="suraDrop" id="suraDrop" aria-label="Surah selector">
+  <button class="suraDropBtn" id="suraDropBtn" type="button" aria-label="Open surah list">
+    <span class="suraDropText" id="suraDropText">Surah 1</span>
+    <span class="suraDropArrow" aria-hidden="true">▼</span>
+  </button>
+
+  <div class="suraDropMenu" id="suraDropMenu" role="listbox" aria-label="Surah list"></div>
+</div>
+
+<!-- ✅ Font Dropdown (Statusbar) -->
+<div class="fontDrop" id="fontDrop" aria-label="Font selector">
+  <button class="fontDropBtn" id="fontDropBtn" type="button" aria-label="Open font list">
+    <span class="fontDropText" id="fontDropText">Font</span>
+    <span class="fontDropArrow" aria-hidden="true">▼</span>
+  </button>
+
+  <div class="fontDropMenu" id="fontDropMenu" role="listbox" aria-label="Font list"></div>
+</div>
+
+<!-- ✅ Reciter Dropdown (Statusbar) -->
+<div class="recDrop" id="recDrop" aria-label="Reciter selector">
+  <button class="recDropBtn" id="recDropBtn" type="button" aria-label="Open reciter list">
+    <span class="recDropText" id="recDropText">Reciter</span>
+    <span class="recDropArrow" aria-hidden="true">▼</span>
+  </button>
+
+  <div class="recDropMenu" id="recDropMenu" role="listbox" aria-label="Reciter list"></div>
+</div>
+
+
+<!-- ✅ Translations Dropdown (Statusbar) -->
+<div class="trDrop" id="trDrop" aria-label="Translations selector">
+  <button class="trDropBtn" id="trDropBtn" type="button" aria-label="Open translations list">
+    <span class="trDropText" id="trDropText">Translation</span>
+    <span class="trDropArrow" aria-hidden="true">▼</span>
+  </button>
+
+  <div class="trDropMenu" id="trDropMenu" role="listbox" aria-label="Translations list"></div>
+</div>
+
+<!-- ✅ Font Size (Statusbar) -->
+<div id="fsCtl" class="fsCtl" title="Font size">
+  <button id="fsBtn" class="fsCircle" type="button" aria-label="Font size (top=plus, bottom=minus)">
+    <span class="fsGlyph fsPlus" aria-hidden="true">+</span>
+    <span class="fsDivider" aria-hidden="true"></span>
+    <span class="fsGlyph fsMinus" aria-hidden="true">−</span>
+  </button>
+
+    <!-- bleibt fürs JS als “unsichtbarer” Wert -->
+  <span id="fsVal" class="fsVal" style="display:none">—</span>
+</div>
+
+          <!-- Jump Pill (Input + Arrow) -->
+          <div class="jumpBox" id="jumpBox" aria-label="Jump to Ayah (z.B. 2:55)">
+            <input
+              id="jumpInput"
+              class="jumpInput"
+              type="text"
+              inputmode="text"
+              placeholder="2:55"
+              aria-label="Jump input (z.B. 2:55)"
+            />
+            <button id="jumpGo" class="jumpArrow" type="button" aria-label="Jump">
+              <svg class="jumpArrowIcon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M13 5l7 7-7 7M20 12H4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- ✅ Mushaf/Ayah Toggle (zwischen Jump und Theme) -->
+          <button class="btnCircle viewToggleBtn" id="viewToggleBtn" type="button" aria-label="Toggle Mushaf/Ayah view">
+            <!-- im Ayahmode zeigen wir: Mushaf-Buch -->
+            <img class="viewIcon viewIconMushaf" src="mushaf_book_6_open_centerline.svg" alt="" aria-hidden="true">
+            <!-- im Mushafmode zeigen wir: Ayah-Lines -->
+            <img class="viewIcon viewIconAyah" src="ayah_lines_2_paragraph.svg" alt="" aria-hidden="true">
+          </button>
+
+<!-- ✅ Theme Toggle (Statusbar: ganz rechts) -->
+<button class="btnCircle themeBtn" id="themeBtn" type="button" aria-label="Toggle theme">
+  <span class="themeIcon themeSun" aria-hidden="true">☀︎</span>
+  <span class="themeIcon themeMoon" aria-hidden="true">☾</span>
+</button>
+
+    <button class="btnCircle playStop" id="playStop" aria-label="Play/Stop">
+      <svg class="icon icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+      <svg class="icon icon-stop" viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
+    </button>
+
+    <button class="btnCircle playPause" id="playPause" aria-label="Pause/Resume">
+      <svg class="icon icon-pause" viewBox="0 0 24 24"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>
+      <svg class="icon icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+    </button>
+
+    <!-- ✅ Volume (immer sichtbar, auch in Favorites) -->
+    <div class="volCtl" id="volCtl" aria-label="Volume">
+      <input
+        id="volSlider"
+        class="volSlider"
+        type="range"
+        min="0"
+        max="100"
+        value="30"
+        step="1"
+        aria-label="Volume slider"
+      />
+    </div>
+
+    <!-- ✅ Sura Pause (klein, erscheint nur wenn Surah-Queue läuft) -->
+    <button id="suraPause" class="suraPauseBtn" aria-label="Pause Surah">
+      <svg class="icon icon-pause" viewBox="0 0 24 24"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>
+      <svg class="icon icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+    </button>
+
+    <!-- ✅ Surah Repeat (nur im SurahPlay sichtbar) -->
+    <button id="suraRepeat" class="suraRepeatBtn" type="button" aria-label="Repeat Surah" title="Repeat">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M17 1l4 4-4 4V6H9a4 4 0 0 0 0 8h1v2H9a6 6 0 0 1 0-12h8V1zM7 23l-4-4 4-4v3h8a4 4 0 0 0 0-8h-1V8h1a6 6 0 0 1 0 12H7v3z"/>
+      </svg>
+    </button>
+
+    <!-- ✅ Favorites Repeat (NUR in Favorites sichtbar, gekoppelt an FavTopRepeat) -->
+    <button id="favRepeat" class="suraRepeatBtn favRepeatBtn" type="button" aria-label="Repeat Favorites" title="Repeat">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M17 1l4 4-4 4V6H9a4 4 0 0 0 0 8h1v2H9a6 6 0 0 1 0-12h8V1zM7 23l-4-4 4-4v3h8a4 4 0 0 0 0-8h-1V8h1a6 6 0 0 1 0 12H7v3z"/>
+      </svg>
+    </button>
+
+    <!-- ✅ Favorites Pause (klein, erscheint nur in Favorites wenn Queue läuft) -->
+    <button id="favPause" class="favPauseBtn" aria-label="Pause Favorites">
+      <svg class="icon icon-pause" viewBox="0 0 24 24"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>
+      <svg class="icon icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+    </button>
+      </div>
+    </div>
+
+    <div class="bar bar-right" aria-hidden="true"></div>
+    <div class="bar bar-bottom" aria-hidden="true"></div>
+  </div>
+
+</body>
+</html>

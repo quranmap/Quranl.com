@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Resolution Preview – Vollbild</title>
+  <style>
+    :root{
+      --bg:#070b14;
+      --stroke:rgba(255,255,255,.12);
+      --text:rgba(255,255,255,.92);
+      --muted:rgba(255,255,255,.70);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      overflow:hidden;
+    }
+
+    .stage{
+      position:fixed;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .frameWrap{
+      position:relative;
+      border:1px solid rgba(255,255,255,.16);
+      border-radius:18px;
+      background:#000;
+      overflow:hidden;
+      transform-origin:center;
+      box-shadow: 0 20px 80px rgba(0,0,0,.45);
+    }
+    .frameWrap::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:18px;
+      pointer-events:none;
+    }
+    iframe{
+      display:block;
+      border:0;
+      background:#000;
+    }
+
+    /* Edge arrows */
+    .navBtn{
+      position:fixed;
+      top:0; bottom:0;
+      width: 9vw;
+      min-width: 80px;
+      max-width: 140px;
+      border:0;
+      background: transparent;
+      cursor:pointer;
+      user-select:none;
+      outline:none;
+      z-index: 20;
+    }
+    .navBtn:hover .chev{ opacity: 1; transform: translateY(-50%) scale(1.06); }
+    .navBtn:active .chev{ transform: translateY(-50%) scale(0.98); }
+    .navLeft{ left:0; }
+    .navRight{ right:0; }
+    .chev{
+      position:absolute;
+      top:50%;
+      transform: translateY(-50%);
+      width: 54px;
+      height: 54px;
+      border-radius: 999px;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size: 28px;
+      opacity:.75;
+      backdrop-filter: blur(10px);
+      transition: .14s ease;
+    }
+    .navLeft .chev{ left: 18px; }
+    .navRight .chev{ right: 18px; }
+
+    /* Top info bar */
+    .info{
+      position:fixed;
+      left:14px; right:14px;
+      top:12px;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+      pointer-events:none;
+      z-index: 30;
+    }
+    .pill{
+      pointer-events:auto;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      padding:10px 12px;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.35);
+      backdrop-filter: blur(10px);
+      max-width: calc(100% - 240px);
+    }
+    .title{ font-weight:800; font-size: 13px; white-space: nowrap; }
+    .dims{ font-size: 12px; color: var(--muted); white-space: nowrap; }
+    .hint{
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow:hidden;
+      text-overflow: ellipsis;
+    }
+    .rightPill{
+      pointer-events:auto;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      padding:10px 12px;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.35);
+      backdrop-filter: blur(10px);
+    }
+    .btn{
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      padding:8px 10px;
+      border-radius: 12px;
+      cursor:pointer;
+      font-weight:700;
+      font-size:12px;
+    }
+    .btn:active{ transform: translateY(1px); }
+
+    .counter{
+      position:fixed;
+      left:50%;
+      bottom:14px;
+      transform: translateX(-50%);
+      padding:8px 12px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.35);
+      backdrop-filter: blur(10px);
+      font-size: 12px;
+      color: var(--muted);
+      pointer-events:none;
+      z-index: 30;
+    }
+
+    /* Magnifier lens (SHIFT halten) */
+    .magnifier{
+      position:fixed;
+      width: 520px; height: 520px;
+      border-radius: 999px;
+      border: 2px solid rgba(255,255,255,.25);
+      box-shadow: 0 18px 60px rgba(0,0,0,.55);
+      overflow: hidden;
+      pointer-events:none;
+      display:none;
+      z-index: 40;
+      background: rgba(0,0,0,.25);
+      backdrop-filter: blur(2px);
+    }
+    .magnifier::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      pointer-events:none;
+    }
+    .magInner{
+      position:absolute;
+      left:0; top:0;
+      width: 1px; height: 1px; /* will be sized in JS */
+      transform-origin: 0 0;
+    }
+    .magInner iframe{
+      position:absolute;
+      left:0; top:0;
+    }
+
+    .magLabel{
+      position: fixed;
+      left: 14px;
+      bottom: 54px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.35);
+      backdrop-filter: blur(10px);
+      font-size: 12px;
+      color: var(--muted);
+      z-index: 30;
+      pointer-events:none;
+    }
+
+    .cross{
+      position:absolute;
+      left:50%; top:50%;
+      width: 22px; height: 22px;
+      transform: translate(-50%,-50%);
+      pointer-events:none;
+      opacity:.85;
+    }
+    .cross:before, .cross:after{
+      content:"";
+      position:absolute;
+      background: rgba(255,255,255,.55);
+      border-radius: 2px;
+    }
+    .cross:before{ width: 2px; height: 22px; left: 10px; top:0; }
+    .cross:after{ height: 2px; width: 22px; left: 0; top:10px; }
+
+    code{background:rgba(255,255,255,.08); padding:2px 6px; border-radius:8px; color:var(--text)}
+  </style>
+</head>
+<body>
+  <div class="stage" id="stage"></div>
+
+  <button class="navBtn navLeft" id="prev" type="button" aria-label="Vorherige Auflösung"><div class="chev">‹</div></button>
+  <button class="navBtn navRight" id="next" type="button" aria-label="Nächste Auflösung"><div class="chev">›</div></button>
+
+  <div class="info">
+    <div class="pill">
+      <div>
+        <div class="title" id="name">–</div>
+        <div class="dims" id="dims">–</div>
+      </div>
+      <div class="hint">Pfeile am Rand oder ← →. <b>Lupe:</b> halte <b>SHIFT</b> gedrückt; Mausrad zoomt.</div>
+    </div>
+    <div class="rightPill">
+      <button class="btn" id="reload">Reload</button>
+      <label style="display:flex; gap:8px; align-items:center; font-size:12px; color:var(--muted); cursor:pointer;">
+        <input id="nocache" type="checkbox" style="accent-color:#7aa7ff;" /> No‑cache
+      </label>
+      <label style="display:flex; gap:8px; align-items:center; font-size:12px; color:var(--muted); cursor:pointer;">
+        <input id="simphone" type="checkbox" style="accent-color:#7aa7ff;" checked /> Handy-Sim (Phone-Presets)
+      </label>
+    </div>
+  </div>
+
+  <div class="counter" id="counter">–</div>
+  <div class="magLabel" id="magLabel">Lupe: SHIFT halten • Zoom 2.00×</div>
+
+  <div class="magnifier" id="magnifier">
+    <div class="magInner" id="magInner"></div>
+    <div class="cross"></div>
+  </div>
+
+  <script>
+    const TARGET = "index.html";
+
+    const PRESETS = [
+      // Desktop 16:9
+      {name:"HD", w:1280, h:720, tag:"16:9"},
+      {name:"Full HD", w:1920, h:1080, tag:"16:9"},
+      {name:"QHD", w:2560, h:1440, tag:"16:9"},
+      {name:"4K UHD", w:3840, h:2160, tag:"16:9"},
+
+      // 16:10
+      {name:"1440×900", w:1440, h:900, tag:"16:10"},
+      {name:"1920×1200", w:1920, h:1200, tag:"16:10"},
+      {name:"2560×1600", w:2560, h:1600, tag:"16:10"},
+
+      // 4:3
+      {name:"XGA", w:1024, h:768, tag:"4:3"},
+      {name:"SXGA", w:1280, h:960, tag:"4:3"},
+      {name:"UXGA", w:1600, h:1200, tag:"4:3"},
+      {name:"2048×1536", w:2048, h:1536, tag:"4:3"},
+
+      // iPad (CSS px)
+      {name:"iPad 9.7/10.2", w:1024, h:768, tag:"iPad (4:3)"},
+      {name:"iPad 10.5", w:1112, h:834, tag:"iPad"},
+      {name:"iPad Air 10.9", w:1180, h:820, tag:"iPad"},
+      {name:"iPad mini 8.3", w:1133, h:744, tag:"iPad"},
+      {name:"iPad Pro 11", w:1194, h:834, tag:"iPad"},
+      {name:"iPad Pro 12.9", w:1366, h:1024, tag:"iPad"},
+
+            // Phones (CSS px – typische Viewportgrößen)
+      {name:"iPhone SE (2/3)", w:375, h:667, tag:"Phone"},
+      {name:"iPhone 12/13/14", w:390, h:844, tag:"Phone"},
+      {name:"iPhone 12/13/14 Pro Max", w:428, h:926, tag:"Phone"},
+      {name:"iPhone 15 Pro", w:393, h:852, tag:"Phone"},
+      {name:"iPhone 15 Pro Max", w:430, h:932, tag:"Phone"},
+      {name:"Pixel 7/8", w:412, h:915, tag:"Phone"},
+      {name:"Pixel 7a/8a", w:412, h:892, tag:"Phone"},
+      {name:"Galaxy S23/S24", w:360, h:800, tag:"Phone"},
+      {name:"Galaxy S23/S24 Ultra", w:384, h:854, tag:"Phone"},
+      {name:"OnePlus 11/12", w:412, h:919, tag:"Phone"},
+      {name:"Small Android", w:360, h:640, tag:"Phone"},
+      {name:"Big Android", w:412, h:732, tag:"Phone"},
+
+      // Ultrawide
+      {name:"UWQHD", w:3440, h:1440, tag:"21:9"},
+      {name:"5120×1440", w:5120, h:1440, tag:"32:9"}
+    ];
+
+    const stage = document.getElementById("stage");
+    const elName = document.getElementById("name");
+    const elDims = document.getElementById("dims");
+    const elCounter = document.getElementById("counter");
+    const btnPrev = document.getElementById("prev");
+    const btnNext = document.getElementById("next");
+    const btnReload = document.getElementById("reload");
+    const cbNoCache = document.getElementById("nocache");
+    const cbSimPhone = document.getElementById("simphone");
+
+    // Magnifier
+    const magnifier = document.getElementById("magnifier");
+    const magInner = document.getElementById("magInner");
+    const magLabel = document.getElementById("magLabel");
+
+    const LENS = 520;      // doubled size
+    const R = LENS / 2;
+
+    let magZoom = 2.0;
+    let shiftDown = false;
+    let lastMouse = {x: 0, y: 0};
+
+    let idx = 0;
+    let iframe, wrap;
+    let magIframe;
+
+    function ratioStr(w,h){
+      const g = (a,b)=> b ? g(b, a%b) : a;
+      const d = g(w,h);
+      return `${w/d}:${h/d}`;
+    }
+
+    function build(){
+      stage.innerHTML = "";
+      wrap = document.createElement("div");
+      wrap.className = "frameWrap";
+
+      iframe = document.createElement("iframe");
+      wrap.appendChild(iframe);
+      stage.appendChild(wrap);
+
+      magInner.innerHTML = "";
+      magIframe = document.createElement("iframe");
+      magIframe.setAttribute("tabindex","-1");
+      magInner.appendChild(magIframe);
+
+      // Important: we position by left/top and only scale the inner content
+      magInner.style.left = "0px";
+      magInner.style.top = "0px";
+      magInner.style.transformOrigin = "0 0";
+    }
+
+    function fitScale(w,h){
+      const padX = 200, padTop = 96, padBottom = 76;
+      const availW = Math.max(320, window.innerWidth - padX);
+      const availH = Math.max(240, window.innerHeight - padTop - padBottom);
+      return Math.min(availW / w, availH / h, 1);
+    }
+
+    function srcWithCache(p){
+      const u = new URL(TARGET, location.href);
+      if (cbNoCache.checked) u.searchParams.set("t", Date.now().toString());
+      const isPhonePreset = (p && (p.tag || "").toLowerCase().includes("phone"));
+      if (cbSimPhone && cbSimPhone.checked && isPhonePreset) u.searchParams.set("forcePhone","1");
+      else u.searchParams.delete("forcePhone");
+      return u.pathname + u.search;
+    }
+
+    function setSrc(p){
+      const src = srcWithCache(p);
+      iframe.src = src;
+      magIframe.src = src;
+    }
+
+    function render(){
+      const p = PRESETS[idx];
+      elName.textContent = `${p.name}`;
+      elDims.textContent = `${p.w}×${p.h} • ${p.tag} • ${ratioStr(p.w,p.h)}`;
+      elCounter.textContent = `${idx+1} / ${PRESETS.length}`;
+
+      iframe.width = p.w; iframe.height = p.h;
+
+      magIframe.width = p.w; magIframe.height = p.h;
+      magInner.style.width = p.w + "px";
+      magInner.style.height = p.h + "px";
+
+      const s = fitScale(p.w, p.h);
+      wrap.style.width = p.w + "px";
+      wrap.style.height = p.h + "px";
+      wrap.style.transform = `scale(${s.toFixed(4)})`;
+
+      setSrc(p);
+      updateMagnifier(lastMouse.x, lastMouse.y);
+    }
+
+    function prev(){ idx = (idx - 1 + PRESETS.length) % PRESETS.length; render(); }
+    function next(){ idx = (idx + 1) % PRESETS.length; render(); }
+
+    btnPrev.addEventListener("click", prev);
+    btnNext.addEventListener("click", next);
+    btnReload.addEventListener("click", () => setSrc(PRESETS[idx]));
+
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowLeft" && e.shiftKey) { prev(); return; }
+      if (e.key === "ArrowRight" && e.shiftKey) { next(); return; }
+
+      if (e.key === "ArrowLeft") prev();
+      if (e.key === "ArrowRight") next();
+      if (e.key === "r" || e.key === "R") setSrc(p);
+
+      if (e.key === "Shift") {
+        shiftDown = true;
+        magnifier.style.display = "block";
+        positionMagnifier(lastMouse.x, lastMouse.y);
+        updateMagnifier(lastMouse.x, lastMouse.y);
+      }
+    });
+
+    window.addEventListener("keyup", (e) => {
+      if (e.key === "Shift") {
+        shiftDown = false;
+        magnifier.style.display = "none";
+      }
+    });
+
+    cbSimPhone && cbSimPhone.addEventListener("change", () => setSrc(PRESETS[idx]));
+
+    window.addEventListener("resize", () => render());
+
+    // Always track mouse so lens doesn't "freeze"
+    window.addEventListener("mousemove", (e) => {
+      lastMouse = {x: e.clientX, y: e.clientY};
+      if (!shiftDown) return;
+      positionMagnifier(e.clientX, e.clientY);
+      updateMagnifier(e.clientX, e.clientY);
+    });
+
+    window.addEventListener("wheel", (e) => {
+      if (!shiftDown) return;
+      e.preventDefault();
+      const delta = Math.sign(e.deltaY);
+      magZoom = Math.min(10, Math.max(1.25, magZoom * (delta > 0 ? 0.9 : 1.1)));
+      magLabel.textContent = `Lupe: SHIFT halten • Zoom ${magZoom.toFixed(2)}×`;
+      updateMagnifier(lastMouse.x, lastMouse.y);
+    }, {passive:false});
+
+    // Lens centered on mouse
+    function positionMagnifier(x,y){
+      let left = x - R;
+      let top  = y - R;
+
+      left = Math.max(6, Math.min(window.innerWidth  - LENS - 6, left));
+      top  = Math.max(6, Math.min(window.innerHeight - LENS - 6, top));
+
+      magnifier.style.left = left + "px";
+      magnifier.style.top  = top  + "px";
+    }
+
+    function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
+
+    function updateMagnifier(mouseX, mouseY){
+      if (!wrap || !iframe || !magIframe) return;
+
+      // 1) Find cursor position inside the scaled preview
+      const wrapRect = wrap.getBoundingClientRect();
+
+      // Clamp to preview area, so you can "reach" edges and corners reliably
+      const cx = clamp(mouseX, wrapRect.left, wrapRect.right);
+      const cy = clamp(mouseY, wrapRect.top,  wrapRect.bottom);
+
+      const relX = cx - wrapRect.left;
+      const relY = cy - wrapRect.top;
+
+      const stageScale = wrapRect.width / iframe.width;
+      const ix = relX / stageScale; // iframe px
+      const iy = relY / stageScale;
+
+      // 2) Scale inner iframe content
+      const Z = magZoom;
+      magInner.style.transform = `scale(${Z})`;
+
+      // 3) Position inner content so point (ix,iy) is in the center of the lens
+      // scaled point on screen = ix*Z, so we want: left + ix*Z = R  => left = R - ix*Z
+      let left = R - ix * Z;
+      let top  = R - iy * Z;
+
+      // 4) Clamp so we don't show outside area
+      const minLeft = LENS - (iframe.width * Z);
+      const minTop  = LENS - (iframe.height * Z);
+      left = clamp(left, minLeft, 0);
+      top  = clamp(top,  minTop,  0);
+
+      magInner.style.left = left + "px";
+      magInner.style.top  = top  + "px";
+    }
+
+    build();
+    render();
+    magLabel.textContent = `Lupe: SHIFT halten • Zoom ${magZoom.toFixed(2)}×`;
+  </script>
+</body>
+</html>
