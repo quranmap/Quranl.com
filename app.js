@@ -1923,23 +1923,29 @@ function __bindTrainerHotkeysOnce() {
     if (viewMode !== "ayah") return;
     if (!/^\d+:\d+$/.test(String(currentRef || ""))) return;
 
-    if (e.key === "1") {
-      e.preventDefault();
-      applyTrainerRatingFromUI(currentRef, "bad", { advance: true });
-      return;
-    }
+    let rating = "";
+    if (e.key === "1") rating = "bad";
+    else if (e.key === "2") rating = "mid";
+    else if (e.key === "3") rating = "good";
+    else return;
 
-    if (e.key === "2") {
-      e.preventDefault();
-      applyTrainerRatingFromUI(currentRef, "mid", { advance: true });
-      return;
-    }
+    e.preventDefault();
 
-    if (e.key === "3") {
-      e.preventDefault();
-      applyTrainerRatingFromUI(currentRef, "good", { advance: true });
-      return;
-    }
+    let uiDelay = 0;
+
+    try {
+      const qv = document.querySelector(".qView");
+      const scoreBtn = qv?.querySelector?.(
+        `.ayahScoreBtn[data-score-ref="${CSS.escape(String(currentRef))}"][data-rating="${CSS.escape(rating)}"]`
+      );
+
+      if (scoreBtn) {
+        const flight = runReaderRecallFlightFromButton(scoreBtn, currentRef, rating);
+        uiDelay = flight?.started ? Math.max(0, Number(flight.totalDelay) || 0) : 0;
+      }
+    } catch (e) {}
+
+    applyTrainerRatingFromUI(currentRef, rating, { advance: true, uiDelay });
   });
 }
 
