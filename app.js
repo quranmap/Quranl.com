@@ -491,11 +491,11 @@ const LS_TRAINER_STAGE_TOP = "quranm_trainer_stage_v1";
 let trainerSession = null;
 let trainerStageCurrent = (() => {
   try {
-    const raw = Number(localStorage.getItem(LS_TRAINER_STAGE_TOP) || "1");
-    if (!Number.isFinite(raw)) return 1;
+    const raw = Number(localStorage.getItem(LS_TRAINER_STAGE_TOP) || "2");
+    if (!Number.isFinite(raw)) return 2;
     return Math.max(1, Math.min(7, raw));
   } catch (e) {
-    return 1;
+    return 2;
   }
 })();
 
@@ -10662,11 +10662,11 @@ function buildAyahTopStageHtmlSafe() {
     } catch(e){}
 
     try {
-      const raw = Number(localStorage.getItem("quranm_trainer_stage_v1") || "1");
+      const raw = Number(localStorage.getItem("quranm_trainer_stage_v1") || "2");
       if (Number.isFinite(raw)) return Math.max(1, Math.min(7, raw));
     } catch(e){}
 
-    return 1;
+    return 2;
   })();
 
   const currentProg = getTrainerStageProgress(current);
@@ -10679,7 +10679,7 @@ function buildAyahTopStageHtmlSafe() {
         type="button"
         data-stage-toggle
         aria-label="Open stage list"
-        style="--stage-progress-pct:${currentProg.pct}%;">
+        style="--stage-progress-pct:${currentProg.pct}%;"> 
 
         <span class="ayahStageDropBtnFill" aria-hidden="true"></span>
         <span class="ayahStageDropText">Stage ${current}</span>
@@ -10701,7 +10701,7 @@ function buildAyahTopStageHtmlSafe() {
               type="button"
               data-stage="${n}"
               aria-label="Stage ${n}, ${prog.done} of ${prog.total}"
-              style="--stage-progress-pct:${prog.pct}%;">
+              style="--stage-progress-pct:${prog.pct}%;"> 
 
               <span class="ayahStageOptFill" aria-hidden="true"></span>
 
