@@ -7474,9 +7474,28 @@ suraProg.addEventListener("click", (e) => {
       _readerScoreTipVisible = true;
       _lastReaderScoreTipKey = key;
 
+      const lower = String(text || "").toLowerCase();
+      const marker = lower.includes("quranl.com") ? "quranl.com" : "";
+      let textHtml = "";
+
+      if (marker) {
+        const idx = lower.indexOf(marker);
+        const rawText = String(text || "");
+        const before = rawText.slice(0, idx).trim();
+        const after = rawText.slice(idx + marker.length).trim();
+
+        textHtml = `
+  ${before ? `<div class="tipTr">${escTip(before)}</div>` : ``}
+  <div class="tipLinkAccent">quranl.com</div>
+  ${after ? `<div class="tipTr">${escTip(after)}</div>` : ``}
+`;
+      } else {
+        textHtml = `<div class="tipTr">${escTip(text)}</div>`;
+      }
+
       readerScoreTip.innerHTML = `
   <div class="tipRef">${escTip(title)}</div>
-  <div class="tipTr">${escTip(text)}</div>
+  ${textHtml}
 `;
     }
 
